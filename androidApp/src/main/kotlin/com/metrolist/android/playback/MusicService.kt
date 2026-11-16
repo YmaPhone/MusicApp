@@ -489,8 +489,8 @@ class MusicService :
         automotiveLibrary = AutomotiveMediaLibrary(this, database)
         media3Player =
             MediaSessionPlayer(
-                artworkUri = { null },
-                currentArtworkUri = { null },
+                artworkUri = { Uri.parse("android.resource://$packageName/${R.drawable.app_icon_static_foreground}") },
+                currentArtworkUri = { Uri.parse("android.resource://$packageName/${R.drawable.app_icon_static_foreground}") },
                 musicPlayer = player,
                 repeatMode = _repeatMode,
                 shuffleModeEnabled = _shuffleModeEnabled,
