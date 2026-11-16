@@ -737,13 +737,13 @@ internal class AutomotiveMediaLibrary(
         if (mediaId == AutomotiveMediaIds.ROOT) return rootItem
         if (mediaId == AutomotiveMediaIds.COLLECTIONS) return folder(mediaId, context.getString(R.string.library))
         mediaItems[mediaId]?.let { item ->
-            val artwork = mediaArtworkUri(context, item.mediaMetadata.artworkUri?.toString())
+            val artwork: Uri? = null
             return item
                 .buildUpon()
                 .setMediaMetadata(
                     item.mediaMetadata
                         .buildUpon()
-                        .setArtworkUri(artwork)
+                        .setArtworkUri(null)
                         .build(),
                 ).build()
         }
@@ -1417,7 +1417,7 @@ internal class AutomotiveMediaLibrary(
                 MediaMetadata
                     .Builder()
                     .setTitle(context.getString(R.string.shuffle))
-                    .setArtworkUri("android.resource://${context.packageName}/${R.drawable.shuffle}".toUri())
+                    .setArtworkUri(null)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
@@ -1440,7 +1440,7 @@ internal class AutomotiveMediaLibrary(
                     .setSubtitle(song.artists.joinToString { it.displayName })
                     .setArtist(song.artists.joinToString { it.displayName })
                     .setAlbumTitle(song.album?.name)
-                    .setArtworkUri(mediaArtworkUri(context, song.thumbnail))
+                    .setArtworkUri(null)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                     .setSupportedCommands(listOf(MediaSessionConstants.ACTION_ADD_TO_QUEUE))
                     .setIsBrowsable(false)
@@ -1471,19 +1471,7 @@ internal class AutomotiveMediaLibrary(
                     .setTitle(playlist.title)
                     .setDisplayTitle(playlist.title)
                     .setSubtitle(subtitle)
-                    .setArtworkUri(
-                        mediaArtworkUri(
-                            context,
-                            libraryArtwork(
-                                playlist.id,
-                                playlist.thumbnail,
-                                playlist.thumbnail.takeIf {
-                                    playlist.source ==
-                                        AutomotivePlaylistSource.LOCAL
-                                },
-                            ),
-                        ),
-                    ).setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
+                    .setArtworkUri(null)).setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setExtras(
@@ -1519,18 +1507,7 @@ internal class AutomotiveMediaLibrary(
                     .setTitle(title)
                     .setDisplayTitle(title)
                     .setSubtitle(subtitle)
-                    .setArtworkUri(
-                        mediaArtworkUri(
-                            context,
-                            artwork ?: libraryArtwork(
-                                when (mediaId) {
-                                    AutomotiveMediaIds.DOWNLOADS -> AutomotiveAutoPlaylist.DOWNLOADED.id
-                                    AutomotiveMediaIds.TOP -> AutomotiveAutoPlaylist.TOP.id
-                                    else -> mediaId
-                                },
-                            ).takeUnless { mediaId == AutomotiveMediaIds.HISTORY },
-                        ),
-                    ).setMediaType(mediaType)
+                    .setArtworkUri(null)).setMediaType(mediaType)
                     .setIsBrowsable(true)
                     .setIsPlayable(false)
                     .setExtras(
