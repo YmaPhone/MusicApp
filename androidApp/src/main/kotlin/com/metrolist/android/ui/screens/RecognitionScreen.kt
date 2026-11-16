@@ -131,7 +131,6 @@ import com.metrolist.android.playback.LocalPlayerConnection
 import com.metrolist.android.recognition.MusicRecognitionService
 import com.metrolist.android.recognition.RecognitionWidgetService
 import com.metrolist.android.ui.screens.settings.SettingsSubScreen
-import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.db.MusicDatabase
 import com.metrolist.shared.db.entities.RecognitionHistory
 import com.metrolist.shared.db.entities.toSongItem
@@ -188,6 +187,7 @@ import com.metrolist.shared.ui.navigation.LocalContentObscured
 import com.metrolist.shared.ui.navigation.LocalRootContentActive
 import com.metrolist.shared.ui.theme.ComponentShapes
 import com.metrolist.shared.ui.tv.tvFocusHighlight
+import com.metrolist.shared.ui.components.images.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
