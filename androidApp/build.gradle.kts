@@ -204,7 +204,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.metrolist.music"
+        applicationId = "com.ymetrolist.music"
         minSdk = 24
         targetSdk = 37
         versionCode = 154
@@ -245,7 +245,7 @@ android {
             isShrinkResources = true
             ndk.debugSymbolLevel = "FULL"
             optimization.keepRules { ignoreFrom("com.materialkolor:material-kolor-android:5.0.1") }
-            manifestPlaceholders["appLabel"] = "Metrolist"
+            manifestPlaceholders["appLabel"] = "YMetrolist"
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -255,7 +255,6 @@ android {
         create("benchmark") {
             initWith(getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
-            applicationIdSuffix = ".benchmark"
             isDebuggable = false
             isProfileable = true
             matchingFallbacks += "release"
