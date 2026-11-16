@@ -126,12 +126,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.withResumed
-import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.android.LocalPlaylistAdder
 import com.metrolist.android.playback.LocalPlayerConnection
 import com.metrolist.android.recognition.MusicRecognitionService
 import com.metrolist.android.recognition.RecognitionWidgetService
 import com.metrolist.android.ui.screens.settings.SettingsSubScreen
+import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.db.MusicDatabase
 import com.metrolist.shared.db.entities.RecognitionHistory
 import com.metrolist.shared.db.entities.toSongItem
