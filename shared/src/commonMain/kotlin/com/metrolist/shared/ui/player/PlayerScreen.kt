@@ -2266,14 +2266,9 @@ fun PlayerScreen(
                                                 } else {
                                                     null
                                                 },
-                                            lyricsText = stringResource(Res.string.lyrics),
                                             onQueueClick = {
                                                 hapticManager.perform(HapticEvent.PRESS)
                                                 queueSheetState.expandSoft()
-                                            },
-                                            onLyricsClick = {
-                                                hapticManager.toggle(!uiState.isLyricsVisible)
-                                                viewModel.setLyricsVisible(!uiState.isLyricsVisible)
                                             },
                                             contentColor = textBackgroundColor,
                                             modifier = Modifier.padding(bottom = navigationBarBottomPadding),
@@ -2290,7 +2285,7 @@ fun PlayerScreen(
                                             onOpenQueue = { queueSheetState.expandSoft() },
                                             onShowPlayerMenu = { showPlayerMenu = true },
                                             isLyricsVisible = uiState.isLyricsVisible,
-                                            onIsLyricsVisibleChange = { visible -> viewModel.setLyricsVisible(visible) },
+                                            onIsLyricsVisibleChange = {},
                                             isVideoAvailable = uiState.isVideoAvailable,
                                             isListenTogetherGuest = isListenTogetherGuest,
                                         )
@@ -2472,16 +2467,6 @@ fun PlayerScreen(
                         )
                     }
 
-                    PopupVisibility(visible = false) {
-                        platform.LyricsMenu(
-                            viewModel = viewModel,
-                            onDismiss = { showLyricsMenu = false },
-                            onShowLyricsOffset = {
-                                showLyricsMenu = false
-                                showLyricsOffsetEditor = true
-                            },
-                        )
-                    }
                 }
             }
         }
