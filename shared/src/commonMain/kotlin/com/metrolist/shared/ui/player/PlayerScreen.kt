@@ -577,7 +577,6 @@ fun PlayerScreen(
     var showPlayerMenu by remember { mutableStateOf(false) }
     var showSongDetails by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
-    var showLyricsMenu by remember { mutableStateOf(false) }
     var showLyricsOffsetEditor by rememberSaveable(currentSong?.id) { mutableStateOf(false) }
     val hapticManager = rememberMetrolistHaptics()
     var seekFeedback by remember { mutableStateOf<SeekFeedback?>(null) }
@@ -609,6 +608,7 @@ fun PlayerScreen(
     }
 
     val isTv = LocalIsTv.current
+    LaunchedEffect(Unit) { viewModel.setLyricsVisible(false) }
     val isInPipMode = LocalIsInPipMode.current
 
     LaunchedEffect(bottomSheetState.isCollapsed, bottomSheetState.isDismissed, isInPipMode) {
@@ -1009,7 +1009,7 @@ fun PlayerScreen(
                                     PlayerBlurredArtworkBackground(
                                         thumbnailUrl = backgroundUrl,
                                         alpha = 1f,
-                                        isLyricsVisible = uiState.isLyricsVisible,
+                                        isLyricsVisible = false,
                                     )
                                 }
                             } else if (playerBackground == PlayerBackgroundStyle.LIQUID && currentSong?.displayThumbnail != null &&
@@ -1990,7 +1990,7 @@ fun PlayerScreen(
                                                 },
                                                 onShowLyricsMenu = {
                                                     hapticManager.perform(HapticEvent.PRESS)
-                                                    showLyricsMenu = true
+                                                    showLyricsMenu = false
                                                 },
                                                 onShareClick = {
                                                     Logger.d("Haptics", "Trigger PlayerScreen share click")
