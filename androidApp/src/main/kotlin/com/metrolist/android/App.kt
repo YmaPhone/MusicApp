@@ -227,6 +227,10 @@ class App :
         onboardingManager = OnboardingManager(this)
         legacyInstallMigration = LegacyInstallMigration(this)
         hadLegacyInstallationAtStartup = legacyInstallMigration.hasLegacyInstallation()
+        // Fresh installs open directly in the library. Keep the legacy migration flow for existing data.
+        if (!hadLegacyInstallationAtStartup && !onboardingManager.isComplete) {
+            onboardingManager.complete()
+        }
         applyTvContinuePlaybackDefault()
         if (hadLegacyInstallationAtStartup) Settings.shared.migrateLegacyV13AccountSettings()
         setPlaybackServicesEnabled(onboardingManager.isComplete)
