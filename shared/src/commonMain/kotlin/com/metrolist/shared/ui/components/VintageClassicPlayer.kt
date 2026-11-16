@@ -321,13 +321,11 @@ private val VintageBottomBarIconSize = 20.dp
 fun VintageClassicBottomBar(
     queueText: String,
     sleepTimerText: String,
-    lyricsText: String,
     sleepTimerRemaining: String?,
     isSleepTimerEnabled: Boolean,
     onQueueClick: () -> Unit,
     onSleepTimerClick: (() -> Unit)?,
     sleepTimerDescription: String,
-    onLyricsClick: () -> Unit,
     contentColor: Color,
     modifier: Modifier = Modifier,
     horizontalPadding: Dp = 30.dp,
@@ -340,7 +338,7 @@ fun VintageClassicBottomBar(
     val sleepLabel = if (sleepTimerActive) sleepTimerRemaining.orEmpty() else sleepTimerText
 
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
-        val labels = listOfNotNull(queueText, sleepLabel.takeIf { onSleepTimerClick != null }, lyricsText)
+        val labels = listOfNotNull(queueText, sleepLabel.takeIf { onSleepTimerClick != null })
         val textWidths =
             remember(labels, textStyle, density, textMeasurer) {
                 labels.map { label ->
@@ -398,14 +396,6 @@ fun VintageClassicBottomBar(
                     modifier = Modifier.weight(1f, fill = false).semantics { contentDescription = sleepTimerDescription },
                 )
             }
-            VintageBottomBarItem(
-                icon = MetrolistIcons.Default.Lyrics,
-                label = lyricsText,
-                showLabel = spec.showLabels,
-                spec = spec,
-                contentColor = contentColor,
-                onClick = onLyricsClick,
-            )
         }
     }
 }
