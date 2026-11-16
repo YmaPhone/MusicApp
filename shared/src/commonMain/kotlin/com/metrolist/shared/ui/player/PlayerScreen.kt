@@ -1973,7 +1973,7 @@ fun PlayerScreen(
                                     ) {
                                         if (playerType == PlayerType.CLASSIC) {
                                             VintageClassicActionButtons(
-                                                isLyricsVisible = uiState.isLyricsVisible,
+                                                isLyricsVisible = false,
                                                 isLyricsExpanded = uiState.isLyricsExpanded,
                                                 shareDescription = stringResource(Res.string.share),
                                                 expandDescription = stringResource(Res.string.expand),
@@ -2017,7 +2017,7 @@ fun PlayerScreen(
                                                     hapticManager.perform(HapticEvent.PRESS)
                                                     viewModel.setLyricsExpanded(!uiState.isLyricsExpanded)
                                                 },
-                                                onShowLyricsMenu = { showLyricsMenu = true },
+                                                onShowLyricsMenu = {},
                                                 isLiked = isLiked,
                                                 onLikeClick = {
                                                     Logger.d("Haptics", "Trigger PlayerScreen like click liked=$isLiked")
