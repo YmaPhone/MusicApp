@@ -737,7 +737,6 @@ internal class AutomotiveMediaLibrary(
         if (mediaId == AutomotiveMediaIds.ROOT) return rootItem
         if (mediaId == AutomotiveMediaIds.COLLECTIONS) return folder(mediaId, context.getString(R.string.library))
         mediaItems[mediaId]?.let { item ->
-            val artwork: Uri? = null
             return item
                 .buildUpon()
                 .setMediaMetadata(
@@ -1471,7 +1470,7 @@ internal class AutomotiveMediaLibrary(
                     .setTitle(playlist.title)
                     .setDisplayTitle(playlist.title)
                     .setSubtitle(subtitle)
-                    .setArtworkUri(null)).setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
+                    .setArtworkUri(null).setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setExtras(
@@ -1507,7 +1506,7 @@ internal class AutomotiveMediaLibrary(
                     .setTitle(title)
                     .setDisplayTitle(title)
                     .setSubtitle(subtitle)
-                    .setArtworkUri(null)).setMediaType(mediaType)
+                    .setArtworkUri(null).setMediaType(mediaType)
                     .setIsBrowsable(true)
                     .setIsPlayable(false)
                     .setExtras(
