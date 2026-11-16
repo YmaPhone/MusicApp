@@ -71,13 +71,11 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import coil3.size.Scale
 import com.metrolist.shared.api.artwork.YouTubeCanvasClip
 import com.metrolist.shared.settings.PlayerBackgroundStyle
 import com.metrolist.shared.ui.components.BlurredArtworkBackground
 import com.metrolist.shared.ui.components.LiquidBackground
 import com.metrolist.shared.ui.components.LocalVisualWorkActive
-import com.metrolist.shared.ui.components.PrefetchPlayerArtwork
 import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.ui.theme.uiEnhanced
 import com.metrolist.shared.ui.utils.artworkHorizontalProgressiveBlur
