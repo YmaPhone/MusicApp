@@ -412,7 +412,7 @@ fun MetrolistApp(
     }
 
     val materialYouEnabled = Settings.shared.materialYouEnabled
-    val songArtworkColorsEnabled = materialYouEnabled && Settings.shared.dynamicTheme
+    val songArtworkColorsEnabled = false // YMetrolist uses a fixed theme and does not decode album artwork.
 
     Settings.shared.systemInDarkTheme = isSystemInDarkTheme()
     val darkTheme = Settings.shared.getCurrentThemeIsDark()
