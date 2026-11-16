@@ -9,6 +9,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import coil3.Image
+import kotlin.math.PI
 
 internal data class LayerArt(
     val painter: Painter,
@@ -25,6 +26,13 @@ internal expect fun PlatformLiquidBackgroundCanvas(
     crossfadeAlpha: () -> Float,
     rotationTimeMs: () -> Long,
 )
+
+internal fun liquidRotationAngles(timeMs: Long): FloatArray =
+    floatArrayOf(
+        (-2.0 * PI * (timeMs % 130_000L) / 130_000.0).toFloat(),
+        (2.0 * PI * (timeMs % 90_000L) / 90_000.0).toFloat(),
+        (2.0 * PI * (timeMs % 70_000L) / 70_000.0).toFloat(),
+    )
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
