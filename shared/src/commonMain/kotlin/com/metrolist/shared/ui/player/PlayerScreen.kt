@@ -2281,7 +2281,7 @@ fun PlayerScreen(
                                             navigationBarBottomPadding = navigationBarBottomPadding,
                                             onOpenQueue = { queueSheetState.expandSoft() },
                                             onShowPlayerMenu = { showPlayerMenu = true },
-                                            isLyricsVisible = uiState.isLyricsVisible,
+                                            isLyricsVisible = false,
                                             onIsLyricsVisibleChange = {},
                                             isVideoAvailable = uiState.isVideoAvailable,
                                             isListenTogetherGuest = isListenTogetherGuest,
