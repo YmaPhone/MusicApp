@@ -977,14 +977,9 @@ internal fun LandscapePlayerContent(
                             } else {
                                 null
                             },
-                        lyricsText = stringResource(Res.string.lyrics),
                         onQueueClick = {
                             hapticManager.perform(HapticEvent.PRESS)
                             onOpenQueue()
-                        },
-                        onLyricsClick = {
-                            hapticManager.perform(HapticEvent.PRESS)
-                            onIsLyricsVisibleChange(!uiState.isLyricsVisible)
                         },
                         contentColor = controlsColor,
                         horizontalPadding = 0.dp,
