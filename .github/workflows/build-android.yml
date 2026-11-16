@@ -24,7 +24,7 @@ jobs:
     permissions:
       contents: read
     with:
-      run-verification: false
+      run-verification: true
       variant: ${{ github.event_name == 'workflow_dispatch' && inputs.variant || 'benchmark' }}
       upload-artifact: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
       artifact-name: YMetrolist-optimized
