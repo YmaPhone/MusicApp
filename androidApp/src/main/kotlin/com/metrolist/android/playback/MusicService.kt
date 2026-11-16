@@ -489,8 +489,8 @@ class MusicService :
         automotiveLibrary = AutomotiveMediaLibrary(this, database)
         media3Player =
             MediaSessionPlayer(
-                artworkUri = { mediaArtworkUri(this, it) },
-                currentArtworkUri = { mediaArtworkUri(this, it, isCurrent = true) },
+                artworkUri = { null },
+                currentArtworkUri = { null },
                 musicPlayer = player,
                 repeatMode = _repeatMode,
                 shuffleModeEnabled = _shuffleModeEnabled,
