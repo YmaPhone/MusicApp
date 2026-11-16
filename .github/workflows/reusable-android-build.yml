@@ -107,7 +107,7 @@ jobs:
           LYPRIO_HMAC_KEY: ${{ secrets.LYPRIO_HMAC_KEY }}
         run: |
           set -euo pipefail
-          if [[ "$BUILD_VARIANT" != "debug" && "$BUILD_VARIANT" != "release" ]]; then
+          if [[ "$BUILD_VARIANT" != "debug" && "$BUILD_VARIANT" != "release" && "$BUILD_VARIANT" != "benchmark" ]]; then
             echo "Unsupported Android variant: $BUILD_VARIANT" >&2
             exit 1
           fi
@@ -204,6 +204,11 @@ jobs:
             extra_args=(--no-configuration-cache)
             # Keep lint tasks registered for verification; skip release analysis after debug lint passes.
             extra_args+=(-x :androidApp:lintVitalRelease)
+          elif [[ "$BUILD_VARIANT" == "benchmark" ]]; then
+            tasks=()
+            if [[ "$ASSEMBLE" == "true" ]]; then
+              tasks+=(':androidApp:assembleBenchmark')
+            fi
           else
             tasks=()
             if [[ "$RUN_VERIFICATION" == "true" ]]; then
@@ -246,6 +251,17 @@ jobs:
 
       - name: Verify APK signature
         if: inputs.variant == 'release' && inputs.require-signing
+        shell: bash
+        run: |
+          set -euo pipefail
+          apksigners=("$ANDROID_HOME"/build-tools/*/apksigner)
+          test -x "${apksigners[-1]}" || { echo "apksigner was not found" >&2; exit 1; }
+          for apk in dist/*.apk; do
+            "${apksigners[-1]}" verify --verbose --print-certs "$apk"
+          done
+
+      - name: Verify optimized YMetrolist APK signature
+        if: inputs.variant == 'benchmark'
         shell: bash
         run: |
           set -euo pipefail
