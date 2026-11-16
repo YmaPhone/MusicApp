@@ -133,9 +133,9 @@ class RecognitionWidgetService : Service() {
             MusicRecognitionService.reset()
         }
 
-        const val ACTION_STOP = "com.metrolist.music.recognizer.STOP"
-        const val ACTION_START = "com.metrolist.music.recognizer.START"
-        const val ACTION_TOGGLE = "com.metrolist.music.widget.recognizer.TOGGLE"
+        const val ACTION_STOP = "com.ymetrolist.music.recognizer.STOP"
+        const val ACTION_START = "com.ymetrolist.music.recognizer.START"
+        const val ACTION_TOGGLE = "com.ymetrolist.music.widget.recognizer.TOGGLE"
         private const val CHANNEL_ID = "widget_recognition"
         private const val NOTIFICATION_ID = 1500
     }
