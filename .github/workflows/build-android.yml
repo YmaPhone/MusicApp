@@ -1,6 +1,9 @@
 name: Build Android
 
 on:
+  push:
+    branches:
+      - ci/build-custom-metrolist-apk
   workflow_dispatch:
     inputs:
       variant:
@@ -21,9 +24,9 @@ jobs:
     permissions:
       contents: read
     with:
-      variant: ${{ inputs.variant || 'debug' }}
-      upload-artifact: ${{ github.event_name == 'workflow_dispatch' }}
-      require-signing: ${{ inputs.variant == 'release' }}
+      variant: ${{ github.event_name == 'workflow_dispatch' && inputs.variant || 'debug' }}
+      upload-artifact: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+      require-signing: ${{ github.event_name == 'workflow_dispatch' && inputs.variant == 'release' }}
       cache-read-only: ${{ github.event_name == 'pull_request' }}
     secrets:
       KEYSTORE_PATH: ${{ secrets.KEYSTORE_PATH || secrets.KEYSTORE }}
