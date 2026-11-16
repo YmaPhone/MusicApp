@@ -93,7 +93,6 @@ import androidx.compose.ui.util.lerp
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import coil3.compose.AsyncImage
 import coil3.memory.MemoryCache
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
@@ -614,8 +613,8 @@ private fun PhotoDetailsSheet(
                                 Modifier.size(24.dp),
                             )
                             details?.authorAvatarUrl?.let { avatar ->
-                                AsyncImage(
-                                    avatar,
+                                com.metrolist.shared.ui.components.images.AsyncImage(
+                                    url = avatar,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize(),
