@@ -71,10 +71,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import coil3.SingletonImageLoader
-import coil3.compose.LocalPlatformContext
-import coil3.request.ImageRequest
-import coil3.request.SuccessResult
 import coil3.size.Scale
 import com.metrolist.shared.api.artwork.YouTubeCanvasClip
 import com.metrolist.shared.settings.PlayerBackgroundStyle
@@ -86,14 +82,11 @@ import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.ui.theme.uiEnhanced
 import com.metrolist.shared.ui.utils.artworkHorizontalProgressiveBlur
 import com.metrolist.shared.ui.utils.supportsNativeBlur
-import com.metrolist.shared.ui.utils.toImageBitmap
 import com.metrolist.shared.youtube.playback.PlaybackResource
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
@@ -374,10 +367,11 @@ internal fun FullscreenThumbnailBackground(
         PlayerBackgroundArtwork(thumbnailUrl, artworkCrossfade) { currentUrl ->
             val artworkBitmap = rememberFullscreenArtworkBitmap(currentUrl, artworkSize)
             if (usesArtworkBleed) {
-                FullscreenArtworkBleed(
+                AsyncImage(
                     url = currentUrl,
-                    artwork = artworkBitmap,
-                    viewport = with(density) { IntSize(maxWidth.roundToPx(), maxHeight.roundToPx()) },
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
                 )
                 return@PlayerBackgroundArtwork
             }
@@ -798,38 +792,12 @@ private fun FullscreenArtworkBackdropCanvas(
     }
 }
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 private fun rememberFullscreenArtworkBitmap(
     thumbnailUrl: String,
     targetSize: IntSize,
-): ImageBitmap? {
-    LocalPlayerTrackArtwork.current?.takeIf { it.url == thumbnailUrl }?.let { return it.bitmap }
-    val context = LocalPlatformContext.current
-    var artwork by remember { mutableStateOf<ImageBitmap?>(null) }
-
-    val request =
-        remember(context, thumbnailUrl, targetSize) {
-            ImageRequest
-                .Builder(context)
-                .data(thumbnailUrl)
-                .size(targetSize.width, targetSize.height)
-                .scale(Scale.FILL)
-                .build()
-        }
-    PrefetchPlayerArtwork(request, targetSize)
-    LaunchedEffect(request) {
-        val loaded =
-            withContext(Dispatchers.IO) {
-                val result = runCatching { SingletonImageLoader.get(context).execute(request) }.getOrNull()
-                (result as? SuccessResult)?.image?.toImageBitmap()
-            }
-        if (loaded != null) {
-            artwork = loaded
-        }
-    }
-
-    return artwork
-}
+): ImageBitmap? = null
 
 private data class FullscreenCropTransform(
     val offsetX: Float,
