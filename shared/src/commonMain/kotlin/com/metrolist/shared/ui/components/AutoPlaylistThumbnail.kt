@@ -20,6 +20,7 @@ const val AUTO_PLAYLIST_ICON_CACHED = "auto_playlist_icon_cached"
 
 fun String?.isAutoPlaylistIcon(): Boolean = this?.startsWith(AUTO_PLAYLIST_ICON_PREFIX) == true
 
+@Suppress("UNUSED_PARAMETER")
 @Composable
 fun AutoPlaylistThumbnail(
     iconIdentifier: String?,
