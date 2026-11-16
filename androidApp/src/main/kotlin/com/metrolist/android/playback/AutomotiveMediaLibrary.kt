@@ -318,6 +318,8 @@ internal class AutomotiveMediaLibrary(
     private val nowMs: () -> Long = System::currentTimeMillis,
     private val refreshLikes: suspend () -> Boolean = { SongLikeState.refreshLikesFromRemote(force = false) },
 ) {
+    private val metrolistArtworkUri = "android.resource://${context.packageName}/${R.drawable.app_icon_static_foreground}".toUri()
+
     private data class RemotePlaylistState(
         val identity: List<String>,
         var page: PlaylistPage? = null,
@@ -742,7 +744,7 @@ internal class AutomotiveMediaLibrary(
                 .setMediaMetadata(
                     item.mediaMetadata
                         .buildUpon()
-                        .setArtworkUri(null)
+                        .setArtworkUri(metrolistArtworkUri)
                         .build(),
                 ).build()
         }
@@ -1416,7 +1418,7 @@ internal class AutomotiveMediaLibrary(
                 MediaMetadata
                     .Builder()
                     .setTitle(context.getString(R.string.shuffle))
-                    .setArtworkUri(null)
+                    .setArtworkUri(metrolistArtworkUri)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
@@ -1439,7 +1441,7 @@ internal class AutomotiveMediaLibrary(
                     .setSubtitle(song.artists.joinToString { it.displayName })
                     .setArtist(song.artists.joinToString { it.displayName })
                     .setAlbumTitle(song.album?.name)
-                    .setArtworkUri(null)
+                    .setArtworkUri(metrolistArtworkUri)
                     .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                     .setSupportedCommands(listOf(MediaSessionConstants.ACTION_ADD_TO_QUEUE))
                     .setIsBrowsable(false)
@@ -1470,7 +1472,7 @@ internal class AutomotiveMediaLibrary(
                     .setTitle(playlist.title)
                     .setDisplayTitle(playlist.title)
                     .setSubtitle(subtitle)
-                    .setArtworkUri(null).setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
+                    .setArtworkUri(metrolistArtworkUri).setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setExtras(
@@ -1506,7 +1508,7 @@ internal class AutomotiveMediaLibrary(
                     .setTitle(title)
                     .setDisplayTitle(title)
                     .setSubtitle(subtitle)
-                    .setArtworkUri(null).setMediaType(mediaType)
+                    .setArtworkUri(metrolistArtworkUri).setMediaType(mediaType)
                     .setIsBrowsable(true)
                     .setIsPlayable(false)
                     .setExtras(
