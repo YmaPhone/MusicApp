@@ -312,10 +312,7 @@ class PlaylistWidgetManager(
             views.setTextViewText(R.id.widget_playlist_compact_quick_pick_title, quickPick.title)
             views.setImageViewBitmap(
                 R.id.widget_playlist_compact_quick_pick_art,
-                quickPick.thumbnailUrl
-                    ?.let { loadBitmap(it, 180) }
-                    ?.let { getRoundedCornerBitmap(it) }
-                    ?: getFallbackArtwork(quickPick),
+                getRoundedAppIcon(),
             )
             views.setOnClickPendingIntent(R.id.widget_playlist_compact_quick_pick, getOpenTargetIntent(quickPick))
             views.setOnClickPendingIntent(
@@ -362,10 +359,7 @@ class PlaylistWidgetManager(
             views.setImageViewResource(slot.playIconId, R.drawable.ic_widget_play_low)
             views.setImageViewBitmap(
                 slot.artworkId,
-                item.thumbnailUrl
-                    ?.let { loadBitmap(it, 180) }
-                    ?.let { getRoundedCornerBitmap(it) }
-                    ?: getFallbackArtwork(item),
+                getRoundedAppIcon(),
             )
             views.setOnClickPendingIntent(slot.containerId, getOpenTargetIntent(item))
             views.setOnClickPendingIntent(slot.playContainerId, getPlayTargetIntent(item))
@@ -500,22 +494,13 @@ class PlaylistWidgetManager(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun getCachedAlbumArt(artworkUri: String?): Bitmap? {
-        if (artworkUri == null) {
-            cachedArtworkUri = null
-            cachedAlbumArt = null
-            cachedRoundedAlbumArt = null
-            cachedRoundedSource = null
-            return null
-        }
-        if (artworkUri != cachedArtworkUri) {
-            val loaded = loadBitmap(artworkUri, 240)
-            cachedAlbumArt = loaded
-            cachedRoundedAlbumArt = null
-            cachedRoundedSource = null
-            cachedArtworkUri = artworkUri.takeIf { loaded != null }
-        }
-        return cachedAlbumArt
+        cachedArtworkUri = null
+        cachedAlbumArt = null
+        cachedRoundedAlbumArt = null
+        cachedRoundedSource = null
+        return null
     }
 
     private fun getRoundedAlbumArt(albumArt: Bitmap): Bitmap {
