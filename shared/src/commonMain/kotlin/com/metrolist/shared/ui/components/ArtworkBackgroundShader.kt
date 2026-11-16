@@ -2,18 +2,9 @@ package com.metrolist.shared.ui.components
 
 import com.metrolist.shared.ui.components.images.AsyncImage
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -29,15 +20,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import coil3.PlatformContext
-import coil3.compose.AsyncImagePainter
-import coil3.compose.LocalPlatformContext
-import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
-import com.metrolist.shared.ui.player.LocalPlayerTrackArtwork
 import com.metrolist.shared.ui.utils.configurePreparedArtwork
 import com.metrolist.shared.ui.utils.nativeBlurCompat
 import com.metrolist.shared.ui.utils.supportsNativeBlur
-import com.metrolist.shared.ui.utils.toImageBitmap
 import kotlin.math.PI
 import kotlin.math.ceil
 import kotlin.math.max
