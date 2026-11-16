@@ -1,7 +1,5 @@
 package com.metrolist.shared.ui.components
 
-import com.metrolist.shared.ui.components.images.AsyncImage
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -21,6 +19,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import coil3.PlatformContext
 import coil3.request.ImageRequest
+import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.ui.utils.configurePreparedArtwork
 import com.metrolist.shared.ui.utils.nativeBlurCompat
 import com.metrolist.shared.ui.utils.supportsNativeBlur
