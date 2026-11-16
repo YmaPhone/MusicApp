@@ -53,11 +53,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.android.LocalMiniPlayerBottomInset
 import com.metrolist.android.playback.LocalPlayerConnection
 import com.metrolist.android.playback.SongDownloadManager
 import com.metrolist.android.ui.download.rememberDownloadPermissionGate
+import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.db.MusicDatabase
 import com.metrolist.shared.db.entities.PodcastEntity
 import com.metrolist.shared.db.entities.Song
