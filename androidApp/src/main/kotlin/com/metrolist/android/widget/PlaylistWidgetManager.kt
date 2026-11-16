@@ -21,17 +21,11 @@ import android.widget.RemoteViews
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.createBitmap
 import coil3.ImageLoader
-import coil3.request.ImageRequest
-import coil3.request.allowHardware
-import coil3.request.crossfade
-import coil3.toBitmap
 import com.metrolist.android.MainActivity
 import com.metrolist.android.R
-import com.metrolist.android.playback.mediaArtworkUri
 import com.metrolist.shared.db.MusicDatabase
 import com.metrolist.shared.model.BuiltinPlaylist
 import com.metrolist.shared.ui.components.libraryArtwork
-import com.metrolist.shared.ui.components.libraryCover
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -512,27 +506,11 @@ class PlaylistWidgetManager(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun loadBitmap(
         uri: String,
         size: Int,
-    ): Bitmap? =
-        withContext(Dispatchers.IO) {
-            try {
-                val request =
-                    ImageRequest
-                        .Builder(context)
-                        .data(if (libraryCover(uri) != null) mediaArtworkUri(context, uri) else uri)
-                        .size(size, size)
-                        .allowHardware(false)
-                        .crossfade(false)
-                        .build()
-                imageLoader.execute(request).image?.toBitmap()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                null
-            }
-        }
+    ): Bitmap? = null
 
     private fun getFallbackArtwork(item: QuickPick): Bitmap {
         val (containerColor, contentColor) =
