@@ -1988,10 +1988,7 @@ fun PlayerScreen(
                                                     hapticManager.perform(HapticEvent.PRESS)
                                                     viewModel.setLyricsExpanded(!uiState.isLyricsExpanded)
                                                 },
-                                                onShowLyricsMenu = {
-                                                    hapticManager.perform(HapticEvent.PRESS)
-                                                    showLyricsMenu = false
-                                                },
+                                                onShowLyricsMenu = {},
                                                 onShareClick = {
                                                     Logger.d("Haptics", "Trigger PlayerScreen share click")
                                                     hapticManager.perform(HapticEvent.PRESS)
@@ -2007,7 +2004,7 @@ fun PlayerScreen(
                                         } else {
                                             PlayerActionRow(
                                                 contentColor = textBackgroundColor,
-                                                isLyricsVisible = uiState.isLyricsVisible,
+                                                isLyricsVisible = false,
                                                 isLyricsExpanded = uiState.isLyricsExpanded,
                                                 onToggleLyricsExpanded = {
                                                     Logger.d(
