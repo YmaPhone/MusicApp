@@ -534,14 +534,13 @@ class MetrolistWidgetManager(
         return views
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun getCachedAlbumArt(artworkUri: String?): Bitmap? {
-        if (artworkUri != null && artworkUri == cachedArtworkUri && cachedAlbumArt != null) return cachedAlbumArt
-        val albumArt = artworkUri?.let { loadAlbumArt(it, 300) }
-        cachedArtworkUri = artworkUri
-        cachedAlbumArt = albumArt
+        cachedArtworkUri = null
+        cachedAlbumArt = null
         cachedCircularAlbumArt = null
         cachedArtworkSeed = null
-        return albumArt
+        return null
     }
 
     private fun getCachedCircularAlbumArt(albumArt: Bitmap?): Bitmap? =
