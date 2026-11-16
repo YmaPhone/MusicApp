@@ -42,6 +42,14 @@ class CollectAndroidApksTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 collect(root, root / "bad", "14.0.0-rc0", "debug")
 
+    def test_collects_optimized_benchmark_apk(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.metadata(root, "benchmark", ["universal"])
+            collect(root, root / "dist", "14.0.0-rc0", "benchmark")
+            self.assertEqual({"YMetrolist.apk"}, {path.name for path in (root / "dist").iterdir()})
+            self.assertEqual(b"universal", (root / "dist/YMetrolist.apk").read_bytes())
+
     def test_nightly_build_metadata_version(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
