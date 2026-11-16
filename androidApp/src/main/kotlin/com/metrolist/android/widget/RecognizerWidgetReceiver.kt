@@ -12,13 +12,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.os.Bundle
 import android.view.View
 import android.widget.RemoteViews
-import coil3.ImageLoader
-import coil3.request.ImageRequest
-import coil3.request.allowHardware
-import coil3.toBitmap
 import com.metrolist.android.App
 import com.metrolist.android.MainActivity
 import com.metrolist.android.R
@@ -28,7 +25,6 @@ import com.metrolist.android.recognition.RecognitionWidgetService
 import com.metrolist.android.utils.launchAsync
 import com.metrolist.shared.recognition.RecognitionStatus
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -69,18 +65,12 @@ class RecognizerWidgetReceiver : AppWidgetProvider() {
 
 object RecognizerWidgets : KoinComponent {
     private const val TINY_MAX_WIDTH_DP = 110
-    private val imageLoader: ImageLoader by inject()
-
     suspend fun update(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context) ?: return
         val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, RecognizerWidgetReceiver::class.java))
         if (widgetIds.isEmpty()) return
         val status = MusicRecognitionService.status.value
-        val artwork =
-            (status as? RecognitionStatus.Success)
-                ?.result
-                ?.let { it.coverArtUrl ?: it.coverArtHqUrl }
-                ?.let { loadArtwork(context, it) }
+        val artwork = loadMetrolistLogo(context)
         widgetIds.forEach { widgetId ->
             val minWidth = appWidgetManager.getAppWidgetOptions(widgetId).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH)
             val compact = minWidth in 1 until TINY_MAX_WIDTH_DP
@@ -194,31 +184,13 @@ object RecognizerWidgets : KoinComponent {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-    private suspend fun loadArtwork(
-        context: Context,
-        url: String,
-    ): Bitmap? =
-        withContext(Dispatchers.IO) {
-            try {
-                val request =
-                    ImageRequest
-                        .Builder(context)
-                        .data(url)
-                        .size(240, 240)
-                        .allowHardware(false)
-                        .build()
-                imageLoader
-                    .execute(request)
-                    .image
-                    ?.toBitmap()
-                    ?.let(::getRoundedCornerBitmap)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                null
-            }
+    private fun loadMetrolistLogo(context: Context): Bitmap {
+        val drawable = context.packageManager.getApplicationIcon(context.packageName)
+        val bitmap = Bitmap.createBitmap(240, 240, Bitmap.Config.ARGB_8888)
+        Canvas(bitmap).also { canvas ->
+            drawable.setBounds(0, 0, 240, 240)
+            drawable.draw(canvas)
         }
-
-    private const val REQUEST_TOGGLE = 700
-    private const val REQUEST_OPEN = 701
+        return bitmap
+    }
 }
