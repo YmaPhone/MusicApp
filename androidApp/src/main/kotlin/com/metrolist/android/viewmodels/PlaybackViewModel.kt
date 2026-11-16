@@ -77,7 +77,7 @@ class PlaybackViewModel(
         viewModelScope.launch {
             combine(
                 currentSong.map { it?.thumbnail }.distinctUntilChanged(),
-                snapshotFlow { Settings.shared.materialYouEnabled && Settings.shared.dynamicTheme },
+                snapshotFlow { false } // YMetrolist filters media artwork; skip hidden album-art color downloads.,
             ) { thumbnail, enabled -> thumbnail.takeIf { enabled } }
                 .distinctUntilChanged()
                 .collectLatestWhileVisible(artworkUiVisible(application)) { url ->
