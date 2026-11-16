@@ -21,7 +21,7 @@ internal fun List<SettingsGroupRegistration>.prioritized(page: SettingsPageId): 
             }
 
             SettingsPageId.LYRICS -> {
-                listOf("behavior", "lyricsAdvanced", "display", "accessibility", "alignment")
+                listOf("behavior", "lyricsAdvanced", "display", "alignment")
             }
 
             SettingsPageId.CONTENT -> {
