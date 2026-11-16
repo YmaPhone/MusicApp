@@ -206,6 +206,14 @@ jobs:
             extra_args+=(-x :androidApp:lintVitalRelease)
           elif [[ "$BUILD_VARIANT" == "benchmark" ]]; then
             tasks=()
+            if [[ "$RUN_VERIFICATION" == "true" ]]; then
+              tasks+=(
+                ":androidApp:lintDebug"
+                ":androidApp:testDebugUnitTest"
+                ":shared:testAndroidHostTest"
+                ":androidApp:ktlintCheck"
+              )
+            fi
             if [[ "$ASSEMBLE" == "true" ]]; then
               tasks+=(':androidApp:assembleBenchmark')
             fi
