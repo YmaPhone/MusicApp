@@ -25,9 +25,6 @@ import com.metrolist.android.recognition.RecognitionWidgetService
 import com.metrolist.android.utils.launchAsync
 import com.metrolist.shared.recognition.RecognitionStatus
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.withContext
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import timber.log.Timber
 
 class RecognizerWidgetReceiver : AppWidgetProvider() {
@@ -63,7 +60,7 @@ class RecognizerWidgetReceiver : AppWidgetProvider() {
     }
 }
 
-object RecognizerWidgets : KoinComponent {
+object RecognizerWidgets {
     private const val TINY_MAX_WIDTH_DP = 110
     suspend fun update(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context) ?: return
