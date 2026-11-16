@@ -26,6 +26,7 @@ jobs:
     with:
       variant: ${{ github.event_name == 'workflow_dispatch' && inputs.variant || 'debug' }}
       upload-artifact: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+      artifact-name: metrolist-custom-debug
       require-signing: ${{ github.event_name == 'workflow_dispatch' && inputs.variant == 'release' }}
       cache-read-only: ${{ github.event_name == 'pull_request' }}
     secrets:
