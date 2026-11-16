@@ -768,8 +768,8 @@ fun PlayerScreen(
 
     var canvasMinimalUi by rememberSaveable { mutableStateOf(false) }
     if (!isCanvasBackdropVisible || !allowArtworkExpansion) canvasMinimalUi = false
-    val shouldFetchLyrics = playerContentState.isActive && (uiState.isLyricsVisible || uiState.isSubtitleActive)
-    val shouldLoadLyrics = shouldFetchLyrics || (playerContentState.isActive && (Settings.shared.showLyricsOnPlayer || canvasMinimalUi))
+    val shouldFetchLyrics = false
+    val shouldLoadLyrics = false
 
     LaunchedEffect(
         currentSong?.id,
@@ -1225,10 +1225,10 @@ fun PlayerScreen(
                                     onNavigateToAlbum = onNavigateToAlbum,
                                     sleepTimerState = sleepTimerState,
                                     onShowSleepTimer = { showSleepTimerDialog = true },
-                                    onShowLyricsMenu = { showLyricsMenu = true },
+                                    onShowLyricsMenu = {},
                                     onOpenQueue = { queueSheetState.expandSoft() },
                                     onShowPlayerMenu = { showPlayerMenu = true },
-                                    onIsLyricsVisibleChange = { visible -> viewModel.setLyricsVisible(visible) },
+                                    onIsLyricsVisibleChange = {},
                                     onShareSong = { shareDisplayedSong() },
                                     onAltShareSong = { copyDisplayedSongLink() },
                                     onToggleLike = toggleDisplayedLike,
@@ -1777,7 +1777,7 @@ fun PlayerScreen(
                                                     songId = currentSong?.id,
                                                     timingOffsetMs = uiState.lyricsOffsetMs,
                                                     isPlaying = isPlaying,
-                                                    showLyrics = Settings.shared.showLyricsOnPlayer || canvasMinimalUi,
+                                                    showLyrics = false,
                                                     textColor =
                                                         if (usesFullscreenThumbnail || canvasMinimalUi) {
                                                             Color.White
@@ -1794,7 +1794,7 @@ fun PlayerScreen(
                                 }
 
                                 AnimatedVisibility(
-                                    visible = uiState.isLyricsVisible && showLyricsOffsetEditor,
+                                    visible = false,
                                     enter = expandVertically() + fadeIn(),
                                     exit = shrinkVertically() + fadeOut(),
                                 ) {
@@ -2472,7 +2472,7 @@ fun PlayerScreen(
                         )
                     }
 
-                    PopupVisibility(visible = showLyricsMenu) {
+                    PopupVisibility(visible = false) {
                         platform.LyricsMenu(
                             viewModel = viewModel,
                             onDismiss = { showLyricsMenu = false },
