@@ -1472,7 +1472,8 @@ internal class AutomotiveMediaLibrary(
                     .setTitle(playlist.title)
                     .setDisplayTitle(playlist.title)
                     .setSubtitle(subtitle)
-                    .setArtworkUri(metrolistArtworkUri).setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
+                    .setArtworkUri(metrolistArtworkUri)
+                    .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
                     .setExtras(
@@ -1508,7 +1509,8 @@ internal class AutomotiveMediaLibrary(
                     .setTitle(title)
                     .setDisplayTitle(title)
                     .setSubtitle(subtitle)
-                    .setArtworkUri(metrolistArtworkUri).setMediaType(mediaType)
+                    .setArtworkUri(metrolistArtworkUri)
+                    .setMediaType(mediaType)
                     .setIsBrowsable(true)
                     .setIsPlayable(false)
                     .setExtras(

@@ -62,6 +62,7 @@ class RecognizerWidgetReceiver : AppWidgetProvider() {
 
 object RecognizerWidgets {
     private const val TINY_MAX_WIDTH_DP = 110
+
     suspend fun update(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context) ?: return
         val widgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, RecognizerWidgetReceiver::class.java))
