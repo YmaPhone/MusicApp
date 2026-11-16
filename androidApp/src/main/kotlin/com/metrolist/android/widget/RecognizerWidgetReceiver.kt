@@ -190,4 +190,7 @@ object RecognizerWidgets {
         }
         return bitmap
     }
+
+    private const val REQUEST_TOGGLE = 700
+    private const val REQUEST_OPEN = 701
 }
