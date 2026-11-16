@@ -182,8 +182,6 @@ internal fun SettingsUiRegistryBuilder.registerLyricsSettings(host: SharedSettin
                 range = 10f..40f,
                 steps = 29,
             ) { settings.subtitleTextSize = it.roundToInt().toFloat() }
-        }
-        group("accessibility", stringResource(Res.string.lyrics_accessibility)) {
             switch(
                 id = "lyricsActiveByRealTiming",
                 title = stringResource(Res.string.lyrics_active_by_real_timing),
