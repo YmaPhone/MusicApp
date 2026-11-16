@@ -53,7 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
+import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.android.LocalMiniPlayerBottomInset
 import com.metrolist.android.playback.LocalPlayerConnection
 import com.metrolist.android.playback.SongDownloadManager
@@ -423,7 +423,7 @@ private fun PodcastShowRow(
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             AsyncImage(
-                model = podcast.thumbnailUrl,
+                url = podcast.thumbnailUrl,
                 contentDescription = podcast.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(64.dp).clip(gridCellShape()),
@@ -465,7 +465,7 @@ private fun PodcastLibraryChannelRow(
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             AsyncImage(
-                model = channel.thumbnail,
+                url = channel.thumbnail,
                 contentDescription = channel.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(64.dp).clip(gridCellShape()),
@@ -563,7 +563,7 @@ private fun PodcastLibraryEpisodeRow(
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(Modifier.size(72.dp).clip(gridCellShape())) {
                 AsyncImage(
-                    model = song.song.thumbnailUrl,
+                    url = song.song.thumbnailUrl,
                     contentDescription = song.song.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
