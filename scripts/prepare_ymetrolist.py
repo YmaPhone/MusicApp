@@ -198,4 +198,40 @@ activity = read(activity_path)
 activity = activity.replace("com.metrolist.music.action.", "com.ymetrolist.music.action.")
 write(activity_path, activity)
 
+# The upstream collector uses a variant-to-filename map. Extend it for our
+# optimized benchmark APK so release uploads and the in-app updater use one name.
+collector_path = "scripts/collect_android_apks.py"
+collector = read(collector_path)
+collector, collector_changes = re.subn(
+    r'(?m)^APK_NAMES = \\{([^\\n]+)\\}
+print("YMetrolist 14.0.1 branding and updater settings prepared.")
+,
+    lambda match: 'APK_NAMES = {' + match.group(1) + ', "benchmark": "YMetrolist.apk"}',
+    collector,
+)
+if collector_changes != 1:
+    raise SystemExit(f"APK collector: expected one APK_NAMES map, found {collector_changes}")
+write(collector_path, collector)
+
+# Retain the benchmark collector regression test after bringing in upstream tests.
+test_path = "scripts/test_collect_android_apks.py"
+test_source = read(test_path)
+if "test_collects_optimized_benchmark_apk" not in test_source:
+    benchmark_test = """    def test_collects_optimized_benchmark_apk(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.metadata(root, "benchmark", ["universal"])
+            collect(root, root / "dist", "14.0.0-rc0", "benchmark")
+            self.assertEqual({"YMetrolist.apk"}, {path.name for path in (root / "dist").iterdir()})
+            self.assertEqual(b"universal", (root / "dist/YMetrolist.apk").read_bytes())
+
+"""
+    test_source = replace_once(
+        test_source,
+        "    def test_nightly_build_metadata_version(self):",
+        benchmark_test + "    def test_nightly_build_metadata_version(self):",
+        "benchmark APK regression test",
+    )
+    write(test_path, test_source)
+
 print("YMetrolist 14.0.1 branding and updater settings prepared.")
