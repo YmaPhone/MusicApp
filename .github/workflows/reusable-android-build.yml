@@ -84,8 +84,34 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          fetch-depth: 0
           submodules: recursive
-          persist-credentials: false
+          persist-credentials: true
+
+      - name: Apply Metrolist 14.0.1 updates and YMetrolist branding
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! grep -qx 'appVersion=14.0.1' gradle.properties; then
+            base_sha="87233f382d75f53c7d5a37b356977b6f5b2874b3"
+            upstream_tag="v14.0.1"
+            git fetch --quiet --no-tags https://github.com/MetrolistGroup/Metrolist.git "refs/tags/${upstream_tag}"
+            upstream_sha="$(git rev-parse FETCH_HEAD)"
+            patch_file="${RUNNER_TEMP}/metrolist-${upstream_tag}.patch"
+            git diff --binary "${base_sha}" "${upstream_sha}" -- . \
+              ':(exclude).github/**' \
+              ':(exclude)metroproto' \
+              ':(exclude)opusDecoder/src/main/jni/libopus' > "${patch_file}"
+            if [[ -s "${patch_file}" ]]; then
+              git apply --3way --index "${patch_file}" || {
+                echo "Could not merge upstream ${upstream_tag} changes onto YMetrolist." >&2
+                git status --short
+                exit 1
+              }
+            fi
+          fi
+          python3 scripts/prepare_ymetrolist.py
+          git status --short
 
       - name: Validate Compose resources and APK collection
         if: inputs.run-verification
@@ -289,6 +315,35 @@ jobs:
             dist/*-mapping.txt
           if-no-files-found: error
           retention-days: 4
+
+      - name: Commit updated YMetrolist source
+        if: inputs.upload-artifact && inputs.variant == 'benchmark'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          if ! git diff --cached --quiet; then
+            git -c user.name="YmaPhone" -c user.email="341053903+YmaPhone@users.noreply.github.com" commit -m "Update YMetrolist to Metrolist 14.0.1"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Publish YMetrolist release for in-app updates
+        if: inputs.upload-artifact && inputs.variant == 'benchmark'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APP_VERSION: ${{ steps.config.outputs.version }}
+        run: |
+          set -euo pipefail
+          tag="v${APP_VERSION}"
+          if gh release view "${tag}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload "${tag}" dist/YMetrolist.apk --clobber --repo "${GITHUB_REPOSITORY}"
+          else
+            gh release create "${tag}" dist/YMetrolist.apk \
+              --target "$(git rev-parse HEAD)" \
+              --title "YMetrolist ${APP_VERSION}" \
+              --notes "YMetrolist ${APP_VERSION}, based on Metrolist ${APP_VERSION}, with Yma customizations."
+          fi
 
       - name: Upload Android staging asset
         if: inputs.staging-release-tag != ''
