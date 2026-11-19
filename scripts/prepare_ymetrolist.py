@@ -203,9 +203,7 @@ write(activity_path, activity)
 collector_path = "scripts/collect_android_apks.py"
 collector = read(collector_path)
 collector, collector_changes = re.subn(
-    r'(?m)^APK_NAMES = \\{([^\\n]+)\\}
-print("YMetrolist 14.0.1 branding and updater settings prepared.")
-,
+    r'(?m)^APK_NAMES = \{([^\n]+)\}$',
     lambda match: 'APK_NAMES = {' + match.group(1) + ', "benchmark": "YMetrolist.apk"}',
     collector,
 )
