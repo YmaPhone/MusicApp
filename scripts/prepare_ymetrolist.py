@@ -192,4 +192,10 @@ if "showLyricsMenu" in player:
     raise SystemExit("PlayerScreen: showLyricsMenu references remain after disabling lyrics")
 write(player_path, player)
 
+# Keep Android intent/action identifiers namespaced under the YMetrolist package.
+activity_path = "androidApp/src/main/kotlin/com/metrolist/android/MainActivity.kt"
+activity = read(activity_path)
+activity = activity.replace("com.metrolist.music.action.", "com.ymetrolist.music.action.")
+write(activity_path, activity)
+
 print("YMetrolist 14.0.1 branding and updater settings prepared.")
