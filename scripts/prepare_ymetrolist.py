@@ -134,4 +134,62 @@ replacement = """    ) { paddingValues ->
 about_screen = about_screen[:start] + replacement + about_screen[end:]
 write(about_path, about_screen)
 
+
+# Upstream 14.0.1 moved and expanded player code. Reapply the no-lyrics player
+# policy on top of that version while leaving lyric providers/services intact.
+player_path = "shared/src/commonMain/kotlin/com/metrolist/shared/ui/player/PlayerScreen.kt"
+player = read(player_path)
+player = player.replace(
+    "    var showLyricsMenu by remember { mutableStateOf(false) }\\n",
+    "",
+)
+player = replace_once(
+    player,
+    "    val isTv = LocalIsTv.current\\n",
+    "    val isTv = LocalIsTv.current\\n    LaunchedEffect(Unit) { viewModel.setLyricsVisible(false) }\\n",
+    "disable persisted player lyrics",
+)
+player, fetch_changes = re.subn(
+    r"(?m)^    val shouldFetchLyrics = .*\\n    val shouldLoadLyrics = .*?$",
+    "    val shouldFetchLyrics = false\\n    val shouldLoadLyrics = false",
+    player,
+)
+if fetch_changes != 1:
+    raise SystemExit(f"PlayerScreen: expected one lyrics-fetch policy block, found {fetch_changes}")
+player = player.replace("onShowLyricsMenu = { showLyricsMenu = true }", "onShowLyricsMenu = {}")
+player = player.replace(
+    "onIsLyricsVisibleChange = { visible -> viewModel.setLyricsVisible(visible) }",
+    "onIsLyricsVisibleChange = {}",
+)
+player = player.replace(
+    "showLyrics = Settings.shared.showLyricsOnPlayer || canvasMinimalUi",
+    "showLyrics = false",
+)
+player = player.replace(
+    "visible = uiState.isLyricsVisible && showLyricsOffsetEditor",
+    "visible = false",
+)
+player = player.replace("isLyricsVisible = uiState.isLyricsVisible", "isLyricsVisible = false")
+player = player.replace("isLyricsVisible = uiState.isLyricsVisible,", "isLyricsVisible = false,")
+player = re.sub(
+    r"(?m)^\\s*lyricsText = stringResource\\(Res\\.string\\.lyrics\\),\\n",
+    "",
+    player,
+)
+player = re.sub(
+    r"(?m)^\\s*onLyricsClick = \\{\\n(?:.*\\n){0,5}?\\s*\\},\\n",
+    "",
+    player,
+)
+player = player.replace("onShowLyricsMenu = {\\n                                                    hapticManager.perform(HapticEvent.PRESS)\\n                                                    showLyricsMenu = true\\n                                                },",
+                        "onShowLyricsMenu = {},")
+player = re.sub(
+    r"(?ms)\\n\\s*PopupVisibility\\(visible = showLyricsMenu\\) \\{\\n\\s*platform\\.LyricsMenu\\(.*?\\n\\s*\\}\\n",
+    "\\n",
+    player,
+)
+if "showLyricsMenu" in player:
+    raise SystemExit("PlayerScreen: showLyricsMenu references remain after disabling lyrics")
+write(player_path, player)
+
 print("YMetrolist 14.0.1 branding and updater settings prepared.")
