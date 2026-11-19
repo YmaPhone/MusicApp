@@ -22,7 +22,7 @@ jobs:
     name: Android
     uses: ./.github/workflows/reusable-android-build.yml
     permissions:
-      contents: read
+      contents: write
     with:
       run-verification: false
       variant: ${{ github.event_name == 'workflow_dispatch' && inputs.variant || 'benchmark' }}
