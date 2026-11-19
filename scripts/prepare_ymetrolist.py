@@ -140,18 +140,18 @@ write(about_path, about_screen)
 player_path = "shared/src/commonMain/kotlin/com/metrolist/shared/ui/player/PlayerScreen.kt"
 player = read(player_path)
 player = player.replace(
-    "    var showLyricsMenu by remember { mutableStateOf(false) }\\n",
+    "    var showLyricsMenu by remember { mutableStateOf(false) }\n",
     "",
 )
 player = replace_once(
     player,
-    "    val isTv = LocalIsTv.current\\n",
-    "    val isTv = LocalIsTv.current\\n    LaunchedEffect(Unit) { viewModel.setLyricsVisible(false) }\\n",
+    "    val isTv = LocalIsTv.current\n",
+    "    val isTv = LocalIsTv.current\n    LaunchedEffect(Unit) { viewModel.setLyricsVisible(false) }\n",
     "disable persisted player lyrics",
 )
 player, fetch_changes = re.subn(
-    r"(?m)^    val shouldFetchLyrics = .*\\n    val shouldLoadLyrics = .*?$",
-    "    val shouldFetchLyrics = false\\n    val shouldLoadLyrics = false",
+    r"(?m)^    val shouldFetchLyrics = .*\n    val shouldLoadLyrics = .*?$",
+    "    val shouldFetchLyrics = false\n    val shouldLoadLyrics = false",
     player,
 )
 if fetch_changes != 1:
@@ -172,20 +172,20 @@ player = player.replace(
 player = player.replace("isLyricsVisible = uiState.isLyricsVisible", "isLyricsVisible = false")
 player = player.replace("isLyricsVisible = uiState.isLyricsVisible,", "isLyricsVisible = false,")
 player = re.sub(
-    r"(?m)^\\s*lyricsText = stringResource\\(Res\\.string\\.lyrics\\),\\n",
+    r"(?m)^\s*lyricsText = stringResource\(Res\.string\.lyrics\),\n",
     "",
     player,
 )
 player = re.sub(
-    r"(?m)^\\s*onLyricsClick = \\{\\n(?:.*\\n){0,5}?\\s*\\},\\n",
+    r"(?m)^\s*onLyricsClick = \{\n(?:.*\n){0,5}?\s*\},\n",
     "",
     player,
 )
-player = player.replace("onShowLyricsMenu = {\\n                                                    hapticManager.perform(HapticEvent.PRESS)\\n                                                    showLyricsMenu = true\\n                                                },",
+player = player.replace("onShowLyricsMenu = {\n                                                    hapticManager.perform(HapticEvent.PRESS)\n                                                    showLyricsMenu = true\n                                                },",
                         "onShowLyricsMenu = {},")
 player = re.sub(
-    r"(?ms)\\n\\s*PopupVisibility\\(visible = showLyricsMenu\\) \\{\\n\\s*platform\\.LyricsMenu\\(.*?\\n\\s*\\}\\n",
-    "\\n",
+    r"(?ms)\n\s*PopupVisibility\(visible = showLyricsMenu\) \{\n\s*platform\.LyricsMenu\(.*?\n\s*\}\n",
+    "\n",
     player,
 )
 if "showLyricsMenu" in player:
