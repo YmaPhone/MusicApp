@@ -103,11 +103,29 @@ jobs:
               ':(exclude)metroproto' \
               ':(exclude)opusDecoder/src/main/jni/libopus' > "${patch_file}"
             if [[ -s "${patch_file}" ]]; then
-              git apply --3way --index "${patch_file}" || {
-                echo "Could not merge upstream ${upstream_tag} changes onto YMetrolist." >&2
-                git status --short
+              apply_status=0
+              git apply --3way --index "${patch_file}" || apply_status=$?
+              # Most upstream changes apply cleanly. The player screen contains
+              # deliberate YMetrolist lyrics removal, so resolve that one overlap
+              # to upstream 14.0.1 and reapply our policy in prepare_ymetrolist.py.
+              while IFS= read -r conflict; do
+                [[ -n "${conflict}" ]] || continue
+                if [[ "${conflict}" == "shared/src/commonMain/kotlin/com/metrolist/shared/ui/player/PlayerScreen.kt" ]]; then
+                  git checkout --theirs -- "${conflict}"
+                  git add "${conflict}"
+                else
+                  echo "Unexpected merge conflict: ${conflict}" >&2
+                  git status --short
+                  exit 1
+                fi
+              done < <(git diff --name-only --diff-filter=U)
+              if git diff --name-only --diff-filter=U | grep -q .; then
+                echo "Unresolved upstream merge conflicts." >&2
                 exit 1
-              }
+              fi
+              if [[ "${apply_status}" -ne 0 ]]; then
+                echo "Resolved upstream patch conflicts; continuing with YMetrolist customizations."
+              fi
             fi
           fi
           python3 scripts/prepare_ymetrolist.py
