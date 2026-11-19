@@ -344,7 +344,7 @@ jobs:
           set -euo pipefail
           git add -A
           if ! git diff --cached --quiet; then
-            git -c user.name="YmaPhone" -c user.email="341053903+YmaPhone@users.noreply.github.com" commit -m "Update YMetrolist to Metrolist 14.0.1"
+            git -c user.name="YmaPhone" -c user.email="341053903+YmaPhone@users.noreply.github.com" commit -m "Update YMetrolist to Metrolist 14.0.1 [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
 
