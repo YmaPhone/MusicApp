@@ -194,74 +194,57 @@ fun AboutScreen(
                 Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .verticalScrollWithDrag(rememberScrollState())
                     .padding(contentPadding)
                     .padding(bottom = bottomInset),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            AppHeaderCard(
-                logo = logo,
-                appName = appName,
-                version = version,
-                architecture = architecture,
-                isDebug = isDebug,
-                colorScheme = colorScheme,
-                onLogoClick = ::handleLogoClick,
-            )
+            Column(
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                Surface(
+                    onClick = ::handleLogoClick,
+                    shape = RoundedCornerShape(28.dp),
+                    color = colorScheme.primaryContainer,
+                    modifier = Modifier.size(112.dp),
+                ) {
+                    Image(
+                        painter = logo,
+                        contentDescription = appName.ifBlank { stringResource(Res.string.app_name) },
+                        colorFilter = ColorFilter.tint(colorScheme.onPrimaryContainer, BlendMode.SrcIn),
+                        modifier = Modifier.padding(12.dp),
+                    )
+                }
 
-            CommunitySection(
-                text = text,
-                onOpenLink = openCommunityLink,
-            )
+                Spacer(Modifier.height(20.dp))
 
-            CollaboratorsList(
-                contributors = listOf(AboutContributors.lead),
-                text = text,
-                title = text.creatorSection,
-                avatarSize = 64.dp,
-                colorScheme = colorScheme,
-                onContributorClick = { selectedContributor = it },
-                onContributorLongClick = onContributorLongClick,
-            )
+                Text(
+                    text = appName.ifBlank { stringResource(Res.string.app_name) },
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                )
 
-            CollaboratorsList(
-                contributors = AboutContributors.leads,
-                text = text,
-                title = text.leadsSection,
-                avatarSize = 64.dp,
-                colorScheme = colorScheme,
-                onContributorClick = { selectedContributor = it },
-                onContributorLongClick = onContributorLongClick,
-            )
+                Spacer(Modifier.height(24.dp))
 
-            CollaboratorsList(
-                contributors = AboutContributors.collaborators,
-                text = text,
-                colorScheme = colorScheme,
-                onContributorClick = { selectedContributor = it },
-                onContributorLongClick = onContributorLongClick,
-            )
+                Text(
+                    text = "נערך על ידי Yma בסייעתא דשמייא",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
 
             Text(
-                text = text.licenseDescription,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center,
+                text = "הפרויקט הזה תומך בישראל",
+                style = MaterialTheme.typography.labelSmall,
                 color = colorScheme.onSurfaceVariant,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.medium)
-                        .clickable(role = Role.Button, onClickLabel = text.license) { openCommunityLink(aboutLicenseLink) }
-                        .padding(16.dp),
-            )
-
-            Text(
-                text = stringResource(Res.string.stands_with_palestine),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = colorScheme.onSurfaceVariant,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

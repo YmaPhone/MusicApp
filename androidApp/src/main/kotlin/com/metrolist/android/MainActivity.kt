@@ -112,6 +112,7 @@ class MainActivity : ComponentActivity() {
         const val ACTION_LOGIN = "com.ymetrolist.music.action.LOGIN"
         const val ACTION_BACKUP_RESTORE = "com.ymetrolist.music.action.BACKUP_RESTORE"
         const val ACTION_RECOGNITION = "com.ymetrolist.music.action.RECOGNITION"
+        const val ACTION_LASTFM = "com.ymetrolist.music.action.LASTFM"
         const val ACTION_OPEN_WIDGET_TARGET = "com.ymetrolist.music.action.OPEN_WIDGET_TARGET"
         const val EXTRA_WIDGET_TARGET_TYPE = "widget_target_type"
         const val EXTRA_WIDGET_TARGET_ID = "widget_target_id"
@@ -313,7 +314,7 @@ class MainActivity : ComponentActivity() {
                             navigationSaveKey = navigationRestoration.saveKey,
                             incomingIntent = incomingIntentState.value,
                             incomingPlaybackSong = incomingPlaybackSong,
-                            onExitApp = ::finish,
+                            onExitApp = ::exitApp,
                             onIncomingIntentConsumed = { consumed ->
                                 if (incomingIntentState.value === consumed) {
                                     incomingIntentState.value = null

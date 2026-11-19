@@ -45,7 +45,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -77,6 +76,8 @@ import com.metrolist.shared.ui.components.BlurredArtworkBackground
 import com.metrolist.shared.ui.components.LiquidBackground
 import com.metrolist.shared.ui.components.LocalVisualWorkActive
 import com.metrolist.shared.ui.components.images.AsyncImage
+import com.metrolist.shared.ui.components.playbackAnimationDelayMillis
+import com.metrolist.shared.ui.components.playbackAnimationOrigin
 import com.metrolist.shared.ui.theme.uiEnhanced
 import com.metrolist.shared.ui.utils.artworkHorizontalProgressiveBlur
 import com.metrolist.shared.ui.utils.supportsNativeBlur
@@ -87,7 +88,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlin.math.max
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.milliseconds
 
 internal fun lerp(
     start: Float,
@@ -987,10 +987,11 @@ internal fun rememberAnimatedGradientStops(
         if (!motionEnabled) return@LaunchedEffect
         visibility.collectLatest { shown ->
             if (!shown) return@collectLatest
-            var lastUpdateTime = withFrameMillis { it }
+            var lastUpdateTime = playbackAnimationOrigin.elapsedNow().inWholeMilliseconds
             while (true) {
-                delay(50.milliseconds)
-                val updateTime = withFrameMillis { it }
+                // Step on the playback clock's grid, like Liquid, so these repaints can share frames with other ticks.
+                delay(playbackAnimationDelayMillis(playbackAnimationOrigin.elapsedNow().inWholeMilliseconds, 50L))
+                val updateTime = playbackAnimationOrigin.elapsedNow().inWholeMilliseconds
                 val elapsedMillis = (updateTime - lastUpdateTime).coerceIn(0L, 100L)
                 gradientPhase = (gradientPhase + elapsedMillis * 0.00025f) % colors.size
                 lastUpdateTime = updateTime

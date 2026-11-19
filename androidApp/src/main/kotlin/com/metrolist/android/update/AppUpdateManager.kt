@@ -20,7 +20,10 @@ import com.metrolist.shared.generated.resources.updates_notification_text
 import com.metrolist.shared.generated.resources.updates_notification_title
 import com.metrolist.shared.network.sharedOkHttpClient
 import com.metrolist.shared.settings.Settings
+import com.metrolist.shared.update.NIGHTLY_TAG
 import com.metrolist.shared.update.ReleaseVersion
+import com.metrolist.shared.update.checkNightly
+import com.metrolist.shared.update.followsNightlyUpdates
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,9 +49,16 @@ data class GitHubRelease(
     val prerelease: Boolean = false,
     @SerialName("published_at") val publishedAt: String? = null,
     @SerialName("html_url") val htmlUrl: String,
+    @SerialName("target_commitish") val targetCommit: String? = null,
     val assets: List<GitHubReleaseAsset> = emptyList(),
 ) {
     val version: String get() = tagName.removePrefix("v")
+    val isNightly: Boolean get() = tagName == NIGHTLY_TAG && !draft
+
+    /** Nightlies share one tag, so their package digest tells them apart. */
+    val updateKey: String get() = if (isNightly) "$NIGHTLY_TAG:${apk?.digest}" else version
+    val isPublishedStable: Boolean
+        get() = !draft && !prerelease && ReleaseVersion.parse(tagName)?.prerelease?.isEmpty() == true
     val apk: GitHubReleaseAsset?
         get() {
             val candidates =
@@ -108,7 +118,7 @@ enum class UpdateFailure { CHECK, NO_APK, DOWNLOAD, DIGEST, INSTALL }
 
 object AppUpdateManager {
     const val CHANNEL_ID = "updates"
-    private const val RELEASES_URL = "https://api.github.com/repos/MetrolistGroup/Metrolist/releases?per_page=50"
+    private const val RELEASES_URL = "https://api.github.com/repos/YmaPhone/MusicApp/releases?per_page=50"
     private const val NOTIFICATION_ID = 1400
     private const val MAX_APK_BYTES = 512L * 1024 * 1024
     private const val MIN_FREE_SPACE_BYTES = 16L * 1024 * 1024
@@ -133,6 +143,7 @@ object AppUpdateManager {
         context: Context,
         networkEnabled: Boolean,
     ): GitHubRelease? {
+        if (!BuildConfig.UPDATER_ENABLED) return null
         if (Settings.shared.updateCacheSource != CACHE_SOURCE) {
             Settings.shared.updateCacheSource = CACHE_SOURCE
             Settings.shared.lastUpdateCheckAttemptTimestamp = 0L
@@ -172,6 +183,7 @@ object AppUpdateManager {
     ): GitHubRelease? =
         withContext(Dispatchers.IO) {
             operationMutex.withLock {
+                if (!BuildConfig.UPDATER_ENABLED) return@withLock null
                 when (val active = mutableState.value) {
                     is AppUpdateState.Downloading -> {
                         return@withLock active.release
@@ -196,19 +208,28 @@ object AppUpdateManager {
                             .header("X-GitHub-Api-Version", "2022-11-28")
                             .header("User-Agent", "Metrolist/${BuildConfig.VERSION_NAME}")
                             .build()
-                    val publicReleases =
+                    val allReleases =
                         client.newCall(request).execute().use { response ->
                             check(response.isSuccessful) { "GitHub returned ${response.code}" }
-                            json
-                                .decodeFromString<List<GitHubRelease>>(checkNotNull(response.body).string())
-                                .filter { release -> !release.draft && ReleaseVersion.parse(release.tagName) != null }
-                                .sortedWith { left, right -> compareVersions(right.version, left.version) }
+                            json.decodeFromString<List<GitHubRelease>>(checkNotNull(response.body).string())
                         }
+                    val publicReleases =
+                        allReleases
+                            .filter { release -> !release.draft && ReleaseVersion.parse(release.tagName) != null }
+                            .sortedWith { left, right -> compareVersions(right.version, left.version) }
                     mutableReleases.value = publicReleases
                     if (!crashRecovery) Settings.shared.cachedUpdateReleasesJson = json.encodeToString(publicReleases)
                     val now = System.currentTimeMillis()
                     if (!crashRecovery) Settings.shared.lastUpdateCheckTimestamp = now
-                    val update = publicReleases.firstOrNull { compareVersions(it.version, currentVersion) > 0 }
+                    val update =
+                        publicReleases.firstOrNull { release ->
+                            (crashRecovery || release.isPublishedStable) &&
+                                compareVersions(release.version, currentVersion) > 0
+                        } ?: allReleases.firstOrNull(GitHubRelease::isNightly)?.takeIf { nightly ->
+                            // A crash offers the nightly even on the stable channel, since it may already carry the fix.
+                            (crashRecovery || followsNightlyUpdates(Settings.shared.updateChannel, currentVersion)) &&
+                                isNewNightly(nightly, confirm = !crashRecovery)
+                        }
                     if (!crashRecovery) Settings.shared.cachedAvailableUpdateJson = update?.let { json.encodeToString(it) }.orEmpty()
                     mutableState.value = if (update == null) AppUpdateState.UpToDate(now) else AppUpdateState.Available(update)
                     if (update != null && notify && !crashRecovery) notifyAvailable(context, update)
@@ -229,8 +250,8 @@ object AppUpdateManager {
     ) = withContext(Dispatchers.IO) {
         operationMutex.withLock {
             when (val active = mutableState.value) {
-                is AppUpdateState.Downloading -> if (active.release.version == release.version) return@withLock
-                is AppUpdateState.Downloaded -> if (active.release.version == release.version && active.file.isFile) return@withLock
+                is AppUpdateState.Downloading -> if (active.release.updateKey == release.updateKey) return@withLock
+                is AppUpdateState.Downloaded -> if (active.release.updateKey == release.updateKey && active.file.isFile) return@withLock
                 else -> Unit
             }
             val asset = release.apk
@@ -384,7 +405,22 @@ object AppUpdateManager {
     private fun cachedAvailableRelease(): GitHubRelease? =
         runCatching { json.decodeFromString<GitHubRelease>(Settings.shared.cachedAvailableUpdateJson) }
             .getOrNull()
-            ?.takeIf { compareVersions(it.version, currentVersion) > 0 }
+            ?.takeIf {
+                if (it.isNightly) {
+                    followsNightlyUpdates(Settings.shared.updateChannel, currentVersion) && isNewNightly(it, confirm = true)
+                } else {
+                    it.isPublishedStable && compareVersions(it.version, currentVersion) > 0
+                }
+            }
+
+    private fun isNewNightly(
+        release: GitHubRelease,
+        confirm: Boolean,
+    ): Boolean {
+        val result = checkNightly(currentVersion, release.targetCommit, release.apk?.digest, Settings.shared.installedNightlyDigest)
+        if (confirm) Settings.shared.installedNightlyDigest = result.installedDigest
+        return result.available
+    }
 
     private fun cachedReleases(): List<GitHubRelease> =
         runCatching { json.decodeFromString<List<GitHubRelease>>(Settings.shared.cachedUpdateReleasesJson) }
@@ -398,7 +434,7 @@ object AppUpdateManager {
         release: GitHubRelease,
     ) {
         if (!Settings.shared.updateNotifications) return
-        if (Settings.shared.lastNotifiedUpdateVersion == release.version) return
+        if (Settings.shared.lastNotifiedUpdateVersion == release.updateKey) return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) {
@@ -426,7 +462,7 @@ object AppUpdateManager {
                 .setAutoCancel(true)
                 .build()
         context.getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification)
-        Settings.shared.lastNotifiedUpdateVersion = release.version
+        Settings.shared.lastNotifiedUpdateVersion = release.updateKey
     }
 
     private fun verifyDigest(
@@ -512,10 +548,11 @@ object AppUpdateManager {
 }
 
 private const val CHECK_INTERVAL_MILLIS = 60 * 60 * 1_000L
-private const val CACHE_SOURCE = "github-releases-metrolist-v1"
+private const val CACHE_SOURCE = "github-releases-ymetrolist-v1"
 private val PREFERRED_APK_NAMES =
     listOf(
-        "Metrolist.apk",
+                "YMetrolist.apk",
+"Metrolist.apk",
         "Metrolist-Android-release.apk",
         "androidApp-release.apk",
         "nightly-Metrolist-Android-release.apk",
