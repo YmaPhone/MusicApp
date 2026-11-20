@@ -612,6 +612,7 @@ fun PlayerScreen(
 
     val isTv = LocalIsTv.current
     LaunchedEffect(Unit) { viewModel.setLyricsVisible(false) }
+    LaunchedEffect(Unit) { viewModel.setLyricsVisible(false) }
     val isInPipMode = LocalIsInPipMode.current
 
     LaunchedEffect(bottomSheetState.isCollapsed, bottomSheetState.isDismissed, isInPipMode) {
