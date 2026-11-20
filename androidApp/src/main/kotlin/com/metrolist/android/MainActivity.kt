@@ -102,17 +102,18 @@ internal class NavigationRestorationViewModel(
 
 class MainActivity : ComponentActivity() {
     companion object {
-        const val ACTION_SEARCH = "com.metrolist.music.action.SEARCH"
-        const val ACTION_PLAYLIST_IMPORT = "com.metrolist.music.action.PLAYLIST_IMPORT"
+        const val ACTION_SEARCH = "com.ymetrolist.music.action.SEARCH"
+        const val ACTION_PLAYLIST_IMPORT = "com.ymetrolist.music.action.PLAYLIST_IMPORT"
         const val EXTRA_IMPORT_RESULT_MESSAGE = "import_result_message"
-        const val ACTION_DOWNLOADS = "com.metrolist.music.action.DOWNLOADS"
-        const val ACTION_LISTEN_TOGETHER = "com.metrolist.music.action.LISTEN_TOGETHER"
-        const val ACTION_LIBRARY = "com.metrolist.music.action.LIBRARY"
-        const val ACTION_UPDATES = "com.metrolist.music.action.UPDATES"
-        const val ACTION_LOGIN = "com.metrolist.music.action.LOGIN"
-        const val ACTION_BACKUP_RESTORE = "com.metrolist.music.action.BACKUP_RESTORE"
-        const val ACTION_RECOGNITION = "com.metrolist.music.action.RECOGNITION"
-        const val ACTION_OPEN_WIDGET_TARGET = "com.metrolist.music.action.OPEN_WIDGET_TARGET"
+        const val ACTION_DOWNLOADS = "com.ymetrolist.music.action.DOWNLOADS"
+        const val ACTION_LISTEN_TOGETHER = "com.ymetrolist.music.action.LISTEN_TOGETHER"
+        const val ACTION_LIBRARY = "com.ymetrolist.music.action.LIBRARY"
+        const val ACTION_UPDATES = "com.ymetrolist.music.action.UPDATES"
+        const val ACTION_LOGIN = "com.ymetrolist.music.action.LOGIN"
+        const val ACTION_BACKUP_RESTORE = "com.ymetrolist.music.action.BACKUP_RESTORE"
+        const val ACTION_RECOGNITION = "com.ymetrolist.music.action.RECOGNITION"
+        const val ACTION_LASTFM = "com.ymetrolist.music.action.LASTFM"
+        const val ACTION_OPEN_WIDGET_TARGET = "com.ymetrolist.music.action.OPEN_WIDGET_TARGET"
         const val EXTRA_WIDGET_TARGET_TYPE = "widget_target_type"
         const val EXTRA_WIDGET_TARGET_ID = "widget_target_id"
     }
@@ -313,7 +314,7 @@ class MainActivity : ComponentActivity() {
                             navigationSaveKey = navigationRestoration.saveKey,
                             incomingIntent = incomingIntentState.value,
                             incomingPlaybackSong = incomingPlaybackSong,
-                            onExitApp = ::finish,
+                            onExitApp = ::exitApp,
                             onIncomingIntentConsumed = { consumed ->
                                 if (incomingIntentState.value === consumed) {
                                     incomingIntentState.value = null

@@ -21,17 +21,11 @@ import android.widget.RemoteViews
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.createBitmap
 import coil3.ImageLoader
-import coil3.request.ImageRequest
-import coil3.request.allowHardware
-import coil3.request.crossfade
-import coil3.toBitmap
 import com.metrolist.android.MainActivity
 import com.metrolist.android.R
-import com.metrolist.android.playback.mediaArtworkUri
 import com.metrolist.shared.db.MusicDatabase
 import com.metrolist.shared.model.BuiltinPlaylist
 import com.metrolist.shared.ui.components.libraryArtwork
-import com.metrolist.shared.ui.components.libraryCover
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -312,10 +306,7 @@ class PlaylistWidgetManager(
             views.setTextViewText(R.id.widget_playlist_compact_quick_pick_title, quickPick.title)
             views.setImageViewBitmap(
                 R.id.widget_playlist_compact_quick_pick_art,
-                quickPick.thumbnailUrl
-                    ?.let { loadBitmap(it, 180) }
-                    ?.let { getRoundedCornerBitmap(it) }
-                    ?: getFallbackArtwork(quickPick),
+                getRoundedAppIcon(),
             )
             views.setOnClickPendingIntent(R.id.widget_playlist_compact_quick_pick, getOpenTargetIntent(quickPick))
             views.setOnClickPendingIntent(
@@ -362,10 +353,7 @@ class PlaylistWidgetManager(
             views.setImageViewResource(slot.playIconId, R.drawable.ic_widget_play_low)
             views.setImageViewBitmap(
                 slot.artworkId,
-                item.thumbnailUrl
-                    ?.let { loadBitmap(it, 180) }
-                    ?.let { getRoundedCornerBitmap(it) }
-                    ?: getFallbackArtwork(item),
+                getRoundedAppIcon(),
             )
             views.setOnClickPendingIntent(slot.containerId, getOpenTargetIntent(item))
             views.setOnClickPendingIntent(slot.playContainerId, getPlayTargetIntent(item))
@@ -500,22 +488,13 @@ class PlaylistWidgetManager(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun getCachedAlbumArt(artworkUri: String?): Bitmap? {
-        if (artworkUri == null) {
-            cachedArtworkUri = null
-            cachedAlbumArt = null
-            cachedRoundedAlbumArt = null
-            cachedRoundedSource = null
-            return null
-        }
-        if (artworkUri != cachedArtworkUri) {
-            val loaded = loadBitmap(artworkUri, 240)
-            cachedAlbumArt = loaded
-            cachedRoundedAlbumArt = null
-            cachedRoundedSource = null
-            cachedArtworkUri = artworkUri.takeIf { loaded != null }
-        }
-        return cachedAlbumArt
+        cachedArtworkUri = null
+        cachedAlbumArt = null
+        cachedRoundedAlbumArt = null
+        cachedRoundedSource = null
+        return null
     }
 
     private fun getRoundedAlbumArt(albumArt: Bitmap): Bitmap {
@@ -527,27 +506,11 @@ class PlaylistWidgetManager(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun loadBitmap(
         uri: String,
         size: Int,
-    ): Bitmap? =
-        withContext(Dispatchers.IO) {
-            try {
-                val request =
-                    ImageRequest
-                        .Builder(context)
-                        .data(if (libraryCover(uri) != null) mediaArtworkUri(context, uri) else uri)
-                        .size(size, size)
-                        .allowHardware(false)
-                        .crossfade(false)
-                        .build()
-                imageLoader.execute(request).image?.toBitmap()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Exception) {
-                null
-            }
-        }
+    ): Bitmap? = null
 
     private fun getFallbackArtwork(item: QuickPick): Bitmap {
         val (containerColor, contentColor) =

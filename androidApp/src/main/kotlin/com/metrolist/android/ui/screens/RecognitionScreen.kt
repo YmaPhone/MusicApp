@@ -126,7 +126,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.withResumed
-import coil3.compose.AsyncImage
 import com.metrolist.android.LocalPlaylistAdder
 import com.metrolist.android.playback.LocalPlayerConnection
 import com.metrolist.android.recognition.MusicRecognitionService
@@ -182,6 +181,7 @@ import com.metrolist.shared.state.SongLikeState
 import com.metrolist.shared.ui.LocalIsTv
 import com.metrolist.shared.ui.components.AlertDialog
 import com.metrolist.shared.ui.components.HistoryEntryGroupPosition
+import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.ui.components.sliders.rememberWavePhase
 import com.metrolist.shared.ui.icons.MetrolistIcons
 import com.metrolist.shared.ui.navigation.LocalContentObscured
@@ -607,7 +607,7 @@ private fun RecognitionHistoryRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             AsyncImage(
-                model = entry.coverArtHqUrl ?: entry.coverArtUrl,
+                url = entry.coverArtHqUrl ?: entry.coverArtUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier =
@@ -1097,7 +1097,7 @@ private fun RecognitionSuccessState(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             AsyncImage(
-                model = result.coverArtHqUrl ?: result.coverArtUrl,
+                url = result.coverArtHqUrl ?: result.coverArtUrl,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,

@@ -29,7 +29,6 @@ fun rememberMetrolistSettingsRegistry(
     builder.registerAppearanceSettings(host)
     builder.registerPlaybackSettings(host)
     builder.registerContentSettings(host)
-    builder.registerLyricsSettings(host)
     builder.registerPrivacySettings(host)
 
     @Composable
@@ -238,7 +237,6 @@ fun rememberMetrolistSettingsRegistry(
     builder.rootGroup(
         stringResource(Res.string.settings_playback),
         SettingsPageId.PLAYER,
-        SettingsPageId.LYRICS,
     )
     builder.rootGroup(stringResource(Res.string.settings_privacy_security), SettingsPageId.PRIVACY)
     builder.rootGroup(

@@ -33,7 +33,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
@@ -179,6 +178,8 @@ import com.metrolist.shared.generated.resources.share
 import com.metrolist.shared.generated.resources.sleep_timer
 import com.metrolist.shared.generated.resources.small_album_art
 import com.metrolist.shared.generated.resources.song
+import com.metrolist.shared.generated.resources.switch_to_audio
+import com.metrolist.shared.generated.resources.switch_to_video
 import com.metrolist.shared.generated.resources.unknown
 import com.metrolist.shared.generated.resources.unlike
 import com.metrolist.shared.generated.resources.video
@@ -200,6 +201,7 @@ import com.metrolist.shared.ui.components.EXPANDED_ANCHOR
 import com.metrolist.shared.ui.components.LiquidBackground
 import com.metrolist.shared.ui.components.LoadingScreen
 import com.metrolist.shared.ui.components.LocalPlayerArtworkPrefetchUrls
+import com.metrolist.shared.ui.components.PlayerMenuAction
 import com.metrolist.shared.ui.components.PlayerPrimaryControls
 import com.metrolist.shared.ui.components.PopupVisibility
 import com.metrolist.shared.ui.components.SleepTimerDialog
@@ -215,6 +217,7 @@ import com.metrolist.shared.ui.components.formatSleepTimerRemaining
 import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.ui.components.lyrics.LyricsContrastScrim
 import com.metrolist.shared.ui.components.lyrics.LyricsOffsetEditor
+import com.metrolist.shared.ui.components.playbackMarquee
 import com.metrolist.shared.ui.components.playerControlBlend
 import com.metrolist.shared.ui.components.rememberBottomSheetState
 import com.metrolist.shared.ui.components.rememberTrackMarquee
@@ -577,7 +580,6 @@ fun PlayerScreen(
     var showPlayerMenu by remember { mutableStateOf(false) }
     var showSongDetails by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
-    var showLyricsMenu by remember { mutableStateOf(false) }
     var showLyricsOffsetEditor by rememberSaveable(currentSong?.id) { mutableStateOf(false) }
     val hapticManager = rememberMetrolistHaptics()
     var seekFeedback by remember { mutableStateOf<SeekFeedback?>(null) }
@@ -609,6 +611,8 @@ fun PlayerScreen(
     }
 
     val isTv = LocalIsTv.current
+    LaunchedEffect(Unit) { viewModel.setLyricsVisible(false) }
+    LaunchedEffect(Unit) { viewModel.setLyricsVisible(false) }
     val isInPipMode = LocalIsInPipMode.current
 
     LaunchedEffect(bottomSheetState.isCollapsed, bottomSheetState.isDismissed, isInPipMode) {
@@ -768,8 +772,8 @@ fun PlayerScreen(
 
     var canvasMinimalUi by rememberSaveable { mutableStateOf(false) }
     if (!isCanvasBackdropVisible || !allowArtworkExpansion) canvasMinimalUi = false
-    val shouldFetchLyrics = playerContentState.isActive && (uiState.isLyricsVisible || uiState.isSubtitleActive)
-    val shouldLoadLyrics = shouldFetchLyrics || (playerContentState.isActive && (Settings.shared.showLyricsOnPlayer || canvasMinimalUi))
+    val shouldFetchLyrics = false
+    val shouldLoadLyrics = false
 
     LaunchedEffect(
         currentSong?.id,
@@ -867,6 +871,8 @@ fun PlayerScreen(
                 }
             val useTabletLayout = isTv && useLandscapeLayout && minOf(screenWidth, maxHeight) >= 600.dp
             val compactPortraitHeight = !useLandscapeLayout && maxHeight < 560.dp
+            // Short split-screen windows shrink the centred artwork to a sliver; show it beside the title as lyrics do.
+            val artworkBesideTitle = !useLandscapeLayout && !isTv && !usesFullscreenThumbnail && maxHeight < ArtworkBesideTitleMaxHeight
             val primaryControlSize = if (compactPortraitHeight) 64.dp else 72.dp
             val showFullscreenThumbnailBackground = usesFullscreenThumbnail
             val navigationBarBottomPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -917,6 +923,47 @@ fun PlayerScreen(
                 derivedStateOf { !useLandscapeLayout && queueSheetState.progress > 0.2f }
             }
             val landscapeQueueVisible = useLandscapeLayout && !queueSheetState.isCollapsed
+            // Phone landscape has no room above the controls, so cast and the audio/video switch move into the player menu.
+            val landscapeMenuActions =
+                if (useLandscapeLayout && !isTv && !landscapeQueueVisible) {
+                    buildList {
+                        if (showVideoButton) {
+                            add(
+                                PlayerMenuAction(
+                                    icon =
+                                        if (isVideoModeActive) {
+                                            MetrolistIcons.Outlined.Headphones
+                                        } else {
+                                            MetrolistIcons.Outlined.SmartDisplay
+                                        },
+                                    title =
+                                        stringResource(
+                                            if (isVideoModeActive) Res.string.switch_to_audio else Res.string.switch_to_video,
+                                        ),
+                                    isLoading = isVideoModeResolving,
+                                    onClick = {
+                                        showPlayerMenu = false
+                                        playerConnection?.setVideoMode(!isVideoModeActive)
+                                    },
+                                ),
+                            )
+                        }
+                        if (!isListenTogetherGuest && platform.supportsCasting && Settings.shared.isPlayerCastButtonVisible) {
+                            add(
+                                PlayerMenuAction(
+                                    icon = if (castState.isConnected) MetrolistIcons.Filled.Cast else MetrolistIcons.Outlined.Cast,
+                                    title = stringResource(Res.string.cast),
+                                    onClick = {
+                                        showPlayerMenu = false
+                                        openCastDialog()
+                                    },
+                                ),
+                            )
+                        }
+                    }
+                } else {
+                    emptyList()
+                }
             val queuePanelWidth = minOf(480.dp, screenWidth / 2)
             val queuePanelSlidePx = with(LocalDensity.current) { queuePanelWidth.toPx() } / 2f
             val queueSlideDirection = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
@@ -1009,7 +1056,7 @@ fun PlayerScreen(
                                     PlayerBlurredArtworkBackground(
                                         thumbnailUrl = backgroundUrl,
                                         alpha = 1f,
-                                        isLyricsVisible = uiState.isLyricsVisible,
+                                        isLyricsVisible = false,
                                     )
                                 }
                             } else if (playerBackground == PlayerBackgroundStyle.LIQUID && currentSong?.displayThumbnail != null &&
@@ -1201,6 +1248,7 @@ fun PlayerScreen(
                                 onShowSleepTimer = { showSleepTimerDialog = true },
                                 onOpenCast = openCastDialog,
                                 isCasting = castState.isConnected,
+                                isBuffering = castState.isBuffering,
                             )
                         } else if (useLandscapeLayout) {
                             if (useTabletLayout || landscapeQueueVisible) {
@@ -1225,10 +1273,10 @@ fun PlayerScreen(
                                     onNavigateToAlbum = onNavigateToAlbum,
                                     sleepTimerState = sleepTimerState,
                                     onShowSleepTimer = { showSleepTimerDialog = true },
-                                    onShowLyricsMenu = { showLyricsMenu = true },
+                                    onShowLyricsMenu = {},
                                     onOpenQueue = { queueSheetState.expandSoft() },
                                     onShowPlayerMenu = { showPlayerMenu = true },
-                                    onIsLyricsVisibleChange = { visible -> viewModel.setLyricsVisible(visible) },
+                                    onIsLyricsVisibleChange = {},
                                     onShareSong = { shareDisplayedSong() },
                                     onAltShareSong = { copyDisplayedSongLink() },
                                     onToggleLike = toggleDisplayedLike,
@@ -1272,10 +1320,10 @@ fun PlayerScreen(
                                     onNavigateToAlbum = onNavigateToAlbum,
                                     sleepTimerState = sleepTimerState,
                                     onShowSleepTimer = { showSleepTimerDialog = true },
-                                    onShowLyricsMenu = { showLyricsMenu = true },
+                                    onShowLyricsMenu = {},
                                     onOpenQueue = { queueSheetState.expandSoft() },
                                     onShowPlayerMenu = { showPlayerMenu = true },
-                                    onIsLyricsVisibleChange = { visible -> viewModel.setLyricsVisible(visible) },
+                                    onIsLyricsVisibleChange = {},
                                     onShareSong = { shareDisplayedSong() },
                                     onAltShareSong = { copyDisplayedSongLink() },
                                     onToggleLike = toggleDisplayedLike,
@@ -1288,7 +1336,6 @@ fun PlayerScreen(
                                     playerType = playerType,
                                     playPauseFocusRequester = playPauseFocusRequester,
                                     showVideoSurface = showVideoSurface,
-                                    onOpenCast = openCastDialog,
                                     castState = castState,
                                     showVideoButton = showVideoButton,
                                     isVideoModeActive = isVideoModeActive,
@@ -1348,6 +1395,7 @@ fun PlayerScreen(
                                             isLoading = uiState.isLyricsLoading,
                                             textColor = textBackgroundColor,
                                             isCasting = castState.isConnected,
+                                            isBuffering = castState.isBuffering,
                                         )
                                     } else {
                                         Column(
@@ -1424,12 +1472,13 @@ fun PlayerScreen(
                                                                         colors =
                                                                             ToggleButtonDefaults.colors(
                                                                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                                                                contentColor = textBackgroundColor,
+                                                                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                                                                 checkedContainerColor = MaterialTheme.colorScheme.primary,
                                                                                 checkedContentColor = MaterialTheme.colorScheme.onPrimary,
                                                                                 disabledContainerColor =
                                                                                     MaterialTheme.colorScheme.surfaceVariant,
-                                                                                disabledContentColor = textBackgroundColor,
+                                                                                disabledContentColor =
+                                                                                    MaterialTheme.colorScheme.onSurfaceVariant,
                                                                             ),
                                                                         modifier =
                                                                             Modifier
@@ -1504,12 +1553,13 @@ fun PlayerScreen(
                                                                         colors =
                                                                             ToggleButtonDefaults.colors(
                                                                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                                                                contentColor = textBackgroundColor,
+                                                                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                                                                 checkedContainerColor = MaterialTheme.colorScheme.primary,
                                                                                 checkedContentColor = MaterialTheme.colorScheme.onPrimary,
                                                                                 disabledContainerColor =
                                                                                     MaterialTheme.colorScheme.surfaceVariant,
-                                                                                disabledContentColor = textBackgroundColor,
+                                                                                disabledContentColor =
+                                                                                    MaterialTheme.colorScheme.onSurfaceVariant,
                                                                             ),
                                                                         modifier =
                                                                             Modifier
@@ -1588,7 +1638,7 @@ fun PlayerScreen(
                                                                     color = textBackgroundColor.copy(alpha = 0.8f),
                                                                     maxLines = 1,
                                                                     modifier =
-                                                                        Modifier.basicMarquee(
+                                                                        Modifier.playbackMarquee(
                                                                             iterations = if (LocalPlayerContentActive.current) 1 else 0,
                                                                             initialDelayMillis = 3000,
                                                                             velocity = 30.dp,
@@ -1607,7 +1657,7 @@ fun PlayerScreen(
                                                         colors =
                                                             IconButtonDefaults.filledIconButtonColors(
                                                                 containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                                                contentColor = textBackgroundColor,
+                                                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                                             ),
                                                         modifier =
                                                             Modifier
@@ -1648,7 +1698,7 @@ fun PlayerScreen(
                                                                             if (castState.isConnected) {
                                                                                 MaterialTheme.colorScheme.onPrimary
                                                                             } else {
-                                                                                textBackgroundColor
+                                                                                MaterialTheme.colorScheme.onSurfaceVariant
                                                                             },
                                                                     ),
                                                                 modifier = Modifier.size(36.dp).playerControlBlend(),
@@ -1730,6 +1780,7 @@ fun PlayerScreen(
                                                     } else if (
                                                         !usesFullscreenThumbnail &&
                                                         !usesCanvasThumbnail &&
+                                                        !artworkBesideTitle &&
                                                         currentSong?.displayThumbnail != null &&
                                                         !(
                                                             isVideoModeActive &&
@@ -1777,7 +1828,7 @@ fun PlayerScreen(
                                                     songId = currentSong?.id,
                                                     timingOffsetMs = uiState.lyricsOffsetMs,
                                                     isPlaying = isPlaying,
-                                                    showLyrics = Settings.shared.showLyricsOnPlayer || canvasMinimalUi,
+                                                    showLyrics = false,
                                                     textColor =
                                                         if (usesFullscreenThumbnail || canvasMinimalUi) {
                                                             Color.White
@@ -1785,6 +1836,7 @@ fun PlayerScreen(
                                                             textBackgroundColor
                                                         },
                                                     isCasting = castState.isConnected,
+                                                    isBuffering = castState.isBuffering,
                                                     hasBackground = usesFullscreenThumbnail || canvasMinimalUi,
                                                     modifier = Modifier.fillMaxWidth(),
                                                 )
@@ -1794,7 +1846,7 @@ fun PlayerScreen(
                                 }
 
                                 AnimatedVisibility(
-                                    visible = uiState.isLyricsVisible && showLyricsOffsetEditor,
+                                    visible = false,
                                     enter = expandVertically() + fadeIn(),
                                     exit = shrinkVertically() + fadeOut(),
                                 ) {
@@ -1819,7 +1871,7 @@ fun PlayerScreen(
                                     ) {
                                         AnimatedVisibility(
                                             visible =
-                                                (usesCanvasThumbnail || uiState.isLyricsVisible) &&
+                                                (usesCanvasThumbnail || uiState.isLyricsVisible || artworkBesideTitle) &&
                                                     currentSong?.displayThumbnail != null,
                                             enter = expandHorizontally(clip = false) + fadeIn(),
                                             exit = shrinkHorizontally(clip = false) + fadeOut(),
@@ -1973,7 +2025,7 @@ fun PlayerScreen(
                                     ) {
                                         if (playerType == PlayerType.CLASSIC) {
                                             VintageClassicActionButtons(
-                                                isLyricsVisible = uiState.isLyricsVisible,
+                                                isLyricsVisible = false,
                                                 isLyricsExpanded = uiState.isLyricsExpanded,
                                                 shareDescription = stringResource(Res.string.share),
                                                 expandDescription = stringResource(Res.string.expand),
@@ -1988,10 +2040,7 @@ fun PlayerScreen(
                                                     hapticManager.perform(HapticEvent.PRESS)
                                                     viewModel.setLyricsExpanded(!uiState.isLyricsExpanded)
                                                 },
-                                                onShowLyricsMenu = {
-                                                    hapticManager.perform(HapticEvent.PRESS)
-                                                    showLyricsMenu = true
-                                                },
+                                                onShowLyricsMenu = {},
                                                 onShareClick = {
                                                     Logger.d("Haptics", "Trigger PlayerScreen share click")
                                                     hapticManager.perform(HapticEvent.PRESS)
@@ -2006,8 +2055,7 @@ fun PlayerScreen(
                                             )
                                         } else {
                                             PlayerActionRow(
-                                                contentColor = textBackgroundColor,
-                                                isLyricsVisible = uiState.isLyricsVisible,
+                                                isLyricsVisible = false,
                                                 isLyricsExpanded = uiState.isLyricsExpanded,
                                                 onToggleLyricsExpanded = {
                                                     Logger.d(
@@ -2017,7 +2065,7 @@ fun PlayerScreen(
                                                     hapticManager.perform(HapticEvent.PRESS)
                                                     viewModel.setLyricsExpanded(!uiState.isLyricsExpanded)
                                                 },
-                                                onShowLyricsMenu = { showLyricsMenu = true },
+                                                onShowLyricsMenu = {},
                                                 isLiked = isLiked,
                                                 onLikeClick = {
                                                     Logger.d("Haptics", "Trigger PlayerScreen like click liked=$isLiked")
@@ -2266,14 +2314,9 @@ fun PlayerScreen(
                                                 } else {
                                                     null
                                                 },
-                                            lyricsText = stringResource(Res.string.lyrics),
                                             onQueueClick = {
                                                 hapticManager.perform(HapticEvent.PRESS)
                                                 queueSheetState.expandSoft()
-                                            },
-                                            onLyricsClick = {
-                                                hapticManager.toggle(!uiState.isLyricsVisible)
-                                                viewModel.setLyricsVisible(!uiState.isLyricsVisible)
                                             },
                                             contentColor = textBackgroundColor,
                                             modifier = Modifier.padding(bottom = navigationBarBottomPadding),
@@ -2289,8 +2332,8 @@ fun PlayerScreen(
                                             navigationBarBottomPadding = navigationBarBottomPadding,
                                             onOpenQueue = { queueSheetState.expandSoft() },
                                             onShowPlayerMenu = { showPlayerMenu = true },
-                                            isLyricsVisible = uiState.isLyricsVisible,
-                                            onIsLyricsVisibleChange = { visible -> viewModel.setLyricsVisible(visible) },
+                                            isLyricsVisible = false,
+                                            onIsLyricsVisibleChange = {},
                                             isVideoAvailable = uiState.isVideoAvailable,
                                             isListenTogetherGuest = isListenTogetherGuest,
                                         )
@@ -2453,6 +2496,7 @@ fun PlayerScreen(
                                 showPlayerMenu = false
                                 showSongDetails = true
                             },
+                            extraActions = landscapeMenuActions,
                         )
                     }
 
@@ -2471,17 +2515,6 @@ fun PlayerScreen(
                             onCancelTimer = { playerConnection?.cancelSleepTimer() },
                         )
                     }
-
-                    PopupVisibility(visible = showLyricsMenu) {
-                        platform.LyricsMenu(
-                            viewModel = viewModel,
-                            onDismiss = { showLyricsMenu = false },
-                            onShowLyricsOffset = {
-                                showLyricsMenu = false
-                                showLyricsOffsetEditor = true
-                            },
-                        )
-                    }
                 }
             }
         }
@@ -2497,3 +2530,4 @@ private fun FullscreenBackgroundBounds(
 }
 
 private val MinPortraitPlayerHeight = 420.dp
+private val ArtworkBesideTitleMaxHeight = 600.dp

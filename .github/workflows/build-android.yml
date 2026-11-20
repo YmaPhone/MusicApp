@@ -1,29 +1,34 @@
 name: Build Android
 
 on:
+  push:
+    branches:
+      - ci/build-custom-metrolist-apk
   workflow_dispatch:
     inputs:
       variant:
         description: APK variant to build and upload as an artifact
         type: choice
-        options: [release, debug]
-        default: release
+        options: [benchmark, release, debug]
+        default: benchmark
 
 concurrency:
   # Dispatched APK builds get their own group so pushes to main cannot cancel them.
   group: android-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
     name: Android
     uses: ./.github/workflows/reusable-android-build.yml
     permissions:
-      contents: read
+      contents: write
     with:
-      variant: ${{ inputs.variant || 'debug' }}
-      upload-artifact: ${{ github.event_name == 'workflow_dispatch' }}
-      require-signing: ${{ inputs.variant == 'release' }}
+      run-verification: false
+      variant: ${{ github.event_name == 'workflow_dispatch' && inputs.variant || 'benchmark' }}
+      upload-artifact: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
+      artifact-name: YMetrolist-optimized
+      require-signing: ${{ github.event_name == 'workflow_dispatch' && inputs.variant == 'release' }}
       cache-read-only: ${{ github.event_name == 'pull_request' }}
     secrets:
       KEYSTORE_PATH: ${{ secrets.KEYSTORE_PATH || secrets.KEYSTORE }}

@@ -78,14 +78,61 @@ on:
 jobs:
   build:
     name: APK
-    runs-on: ${{ inputs.variant == 'release' && 'blacksmith-8vcpu-ubuntu-2604' || 'blacksmith-4vcpu-ubuntu-2604' }}
-    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
+          fetch-depth: 0
           submodules: recursive
-          persist-credentials: false
+          persist-credentials: true
+
+      - name: Apply Metrolist 14.0.1 updates and YMetrolist branding
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! grep -qx 'appVersion=14.0.1' gradle.properties; then
+            base_sha="87233f382d75f53c7d5a37b356977b6f5b2874b3"
+            upstream_tag="v14.0.1"
+            git fetch --quiet --no-tags https://github.com/MetrolistGroup/Metrolist.git "refs/tags/${upstream_tag}"
+            upstream_sha="$(git rev-parse FETCH_HEAD)"
+            patch_file="${RUNNER_TEMP}/metrolist-${upstream_tag}.patch"
+            git diff --binary "${base_sha}" "${upstream_sha}" -- . \
+              ':(exclude).github/**' \
+              ':(exclude)metroproto' \
+              ':(exclude)opusDecoder/src/main/jni/libopus' > "${patch_file}"
+            if [[ -s "${patch_file}" ]]; then
+              apply_status=0
+              git apply --3way --index "${patch_file}" || apply_status=$?
+              # Most upstream changes apply cleanly. The player screen contains
+              # deliberate YMetrolist lyrics removal, so resolve that one overlap
+              # to upstream 14.0.1 and reapply our policy in prepare_ymetrolist.py.
+              while IFS= read -r conflict; do
+                [[ -n "${conflict}" ]] || continue
+                case "${conflict}" in
+                  "shared/src/commonMain/kotlin/com/metrolist/shared/ui/player/PlayerScreen.kt"|"androidApp/src/main/kotlin/com/metrolist/android/MainActivity.kt"|"scripts/collect_android_apks.py"|"scripts/test_collect_android_apks.py")
+                    git checkout --theirs -- "${conflict}"
+                    git add "${conflict}"
+                    ;;
+                  *)
+                    echo "Unexpected merge conflict: ${conflict}" >&2
+                    git status --short
+                    exit 1
+                    ;;
+                esac
+              done < <(git diff --name-only --diff-filter=U)
+              if git diff --name-only --diff-filter=U | grep -q .; then
+                echo "Unresolved upstream merge conflicts." >&2
+                exit 1
+              fi
+              if [[ "${apply_status}" -ne 0 ]]; then
+                echo "Resolved upstream patch conflicts; continuing with YMetrolist customizations."
+              fi
+            fi
+          fi
+          python3 scripts/prepare_ymetrolist.py
+          git status --short
 
       - name: Validate Compose resources and APK collection
         if: inputs.run-verification
@@ -107,7 +154,7 @@ jobs:
           LYPRIO_HMAC_KEY: ${{ secrets.LYPRIO_HMAC_KEY }}
         run: |
           set -euo pipefail
-          if [[ "$BUILD_VARIANT" != "debug" && "$BUILD_VARIANT" != "release" ]]; then
+          if [[ "$BUILD_VARIANT" != "debug" && "$BUILD_VARIANT" != "release" && "$BUILD_VARIANT" != "benchmark" ]]; then
             echo "Unsupported Android variant: $BUILD_VARIANT" >&2
             exit 1
           fi
@@ -181,6 +228,7 @@ jobs:
         env:
           BUILD_VARIANT: ${{ inputs.variant }}
           ASSEMBLE: ${{ inputs.assemble }}
+          RUN_VERIFICATION: ${{ inputs.run-verification }}
           VERIFICATION_ONLY: ${{ inputs.variant == 'debug' && !inputs.upload-artifact && inputs.staging-release-tag == '' }}
           KEYSTORE_PATH: ${{ steps.signing.outputs.keystore_path }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -203,13 +251,29 @@ jobs:
             extra_args=(--no-configuration-cache)
             # Keep lint tasks registered for verification; skip release analysis after debug lint passes.
             extra_args+=(-x :androidApp:lintVitalRelease)
+          elif [[ "$BUILD_VARIANT" == "benchmark" ]]; then
+            tasks=()
+            if [[ "$RUN_VERIFICATION" == "true" ]]; then
+              tasks+=(
+                ":androidApp:lintDebug"
+                ":androidApp:testDebugUnitTest"
+                ":shared:testAndroidHostTest"
+                ":androidApp:ktlintCheck"
+              )
+            fi
+            if [[ "$ASSEMBLE" == "true" ]]; then
+              tasks+=(':androidApp:assembleBenchmark')
+            fi
           else
-            tasks=(
-              ":androidApp:lintDebug"
-              ":androidApp:testDebugUnitTest"
-              ":shared:testAndroidHostTest"
-              ":androidApp:ktlintCheck"
-            )
+            tasks=()
+            if [[ "$RUN_VERIFICATION" == "true" ]]; then
+              tasks+=(
+                ":androidApp:lintDebug"
+                ":androidApp:testDebugUnitTest"
+                ":shared:testAndroidHostTest"
+                ":androidApp:ktlintCheck"
+              )
+            fi
             if [[ "$ASSEMBLE" == "true" ]]; then
               tasks+=(':androidApp:assembleDebug')
             fi
@@ -251,6 +315,17 @@ jobs:
             "${apksigners[-1]}" verify --verbose --print-certs "$apk"
           done
 
+      - name: Verify optimized YMetrolist APK signature
+        if: inputs.variant == 'benchmark'
+        shell: bash
+        run: |
+          set -euo pipefail
+          apksigners=("$ANDROID_HOME"/build-tools/*/apksigner)
+          test -x "${apksigners[-1]}" || { echo "apksigner was not found" >&2; exit 1; }
+          for apk in dist/*.apk; do
+            "${apksigners[-1]}" verify --verbose --print-certs "$apk"
+          done
+
       - name: Upload Android artifact
         if: inputs.upload-artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -261,6 +336,35 @@ jobs:
             dist/*-mapping.txt
           if-no-files-found: error
           retention-days: 4
+
+      - name: Commit updated YMetrolist source
+        if: inputs.upload-artifact && inputs.variant == 'benchmark'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          if ! git diff --cached --quiet; then
+            git -c user.name="YmaPhone" -c user.email="341053903+YmaPhone@users.noreply.github.com" commit -m "Update YMetrolist to Metrolist 14.0.1 [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - name: Publish YMetrolist release for in-app updates
+        if: inputs.upload-artifact && inputs.variant == 'benchmark'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APP_VERSION: ${{ steps.config.outputs.version }}
+        run: |
+          set -euo pipefail
+          tag="v${APP_VERSION}"
+          if gh release view "${tag}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            gh release upload "${tag}" dist/YMetrolist.apk --clobber --repo "${GITHUB_REPOSITORY}"
+          else
+            gh release create "${tag}" dist/YMetrolist.apk \
+              --target "$(git rev-parse HEAD)" \
+              --title "YMetrolist ${APP_VERSION}" \
+              --notes "YMetrolist ${APP_VERSION}, based on Metrolist ${APP_VERSION}, with Yma customizations."
+          fi
 
       - name: Upload Android staging asset
         if: inputs.staging-release-tag != ''

@@ -108,6 +108,7 @@ import com.metrolist.shared.constants.LibraryManualOrderKey
 import com.metrolist.shared.constants.LibraryPinchColumnsKey
 import com.metrolist.shared.constants.LibrarySortDirectionKey
 import com.metrolist.shared.constants.LibrarySortingByFilterKey
+import com.metrolist.shared.constants.LibraryViewsByFilterKey
 import com.metrolist.shared.constants.LikedSongSortDirectionKey
 import com.metrolist.shared.constants.LikedSongSortKey
 import com.metrolist.shared.constants.LikedSongsCustomOrdersJsonKey
@@ -124,6 +125,8 @@ import com.metrolist.shared.constants.LyricsOpenRouterOAuthSessionKey
 import com.metrolist.shared.constants.LyricsPlusLighterKey
 import com.metrolist.shared.constants.LyricsProgressiveBlurKey
 import com.metrolist.shared.constants.LyricsShareImageStyleKey
+import com.metrolist.shared.constants.LyricsShowOriginalLyricsKey
+import com.metrolist.shared.constants.MatugenThemeKey
 import com.metrolist.shared.constants.MinimumSongDurationSecondsKey
 import com.metrolist.shared.constants.MusicVideoCacheJsonKey
 import com.metrolist.shared.constants.MusicVideoPlaybackEnabledKey
@@ -140,6 +143,7 @@ import com.metrolist.shared.constants.PlaybackSpeedKey
 import com.metrolist.shared.constants.PlayerConfigRemoteEtagKey
 import com.metrolist.shared.constants.PlayerConfigRemoteSourceUrlKey
 import com.metrolist.shared.constants.PlaylistCollectionSortingsKey
+import com.metrolist.shared.constants.PlaylistEditLockKey
 import com.metrolist.shared.constants.PlaylistPickerSortDirectionKey
 import com.metrolist.shared.constants.PlaylistPickerSortKey
 import com.metrolist.shared.constants.PlaylistSongSortingsKey
@@ -173,6 +177,9 @@ import com.metrolist.shared.constants.SlimNavBarKey
 import com.metrolist.shared.constants.SpeedDialArtworkRefreshTimesKey
 import com.metrolist.shared.constants.SpeedDialSurprisePinnedKey
 import com.metrolist.shared.constants.SponsorBlockEnabledKey
+import com.metrolist.shared.constants.SupportPromptDismissedKey
+import com.metrolist.shared.constants.SupportPromptLaunchThresholdKey
+import com.metrolist.shared.constants.SupportPromptLaunchesKey
 import com.metrolist.shared.constants.SwipeToRemoveSongKey
 import com.metrolist.shared.constants.SwipeToSongKey
 import com.metrolist.shared.constants.TempoPitchPresetsJsonKey
@@ -271,6 +278,9 @@ class Settings(
     val artistNameAliases: Map<String, String> by derivedStateOf { ArtistNameAliases.deserialize(artistNameAliasesJson) }
 
     var tokenLoginWarningDismissed by preference(TokenLoginWarningDismissedKey, false)
+    var supportPromptDismissed by preference(SupportPromptDismissedKey, false)
+    var supportPromptLaunches by preference(SupportPromptLaunchesKey, 0)
+    var supportPromptLaunchThreshold by preference(SupportPromptLaunchThresholdKey, 0)
     var visitorData by preference("")
     var dataSyncId by preference("")
     var innerTubeAuthUser by preference("0")
@@ -310,6 +320,7 @@ class Settings(
     var autoPureBlack by preference(AutoPureBlackKey, false)
     var selectedThemeColor by preference(0L)
     var themePaletteStyle by preference(ThemePaletteStyle.TONAL_SPOT)
+    var matugenTheme by preference(MatugenThemeKey, false)
 
     var appFont by preference(FontOption.SYSTEM)
     var androidCustomFontFile by preference(AndroidCustomFontFileKey, "")
@@ -520,7 +531,6 @@ class Settings(
     var lyricsAiBaseUrl by preference("https://openrouter.ai/api/v1/chat/completions")
     var lyricsAiModel by preference(AiProviderPresets.DEFAULT_LYRICS_AI_MODEL)
 
-    var lyricsAiDetectorModel by preference("")
     var lyricsAiTargetLanguage by preference("device")
     var lyricsAiTranslationMode by preference("Literal")
     var lyricsAiActivationMode by preference("Automatic")
@@ -529,6 +539,9 @@ class Settings(
     var lyricsDeepLFormality by preference("default")
     var lyricsRomanizationEnabled by preference(false)
     var lyricsRomanizeAsMain by preference(false)
+    var lyricsShowOriginalLyrics by preference(LyricsShowOriginalLyricsKey, true)
+    val isLyricsRomanizationActive: Boolean
+        get() = lyricsRomanizationEnabled
     var lyricsSyllableRomanizationEnabled by preference(true)
     var lyricsRomanizeCyrillicByLine by preference(false)
     var lyricsRomanizeLanguages by preference(
@@ -570,6 +583,7 @@ class Settings(
     var downloadLocation by preference("INTERNAL")
     var customDownloadPath by preference("")
     var autoDownloadOnLike by preference(false)
+    var autoDownloadSavedCollections by preference(false)
     var keepDownloadedPlaylistsJson by preference(KeepDownloadedPlaylistsJsonKey, "")
     var desktopStoppedDownloadIdsJson by preference(DesktopStoppedDownloadIdsJsonKey, "")
     var androidLastStorageAudit by preference(AndroidLastStorageAuditKey, 0L)
@@ -578,6 +592,8 @@ class Settings(
 
     var checkForUpdates by preference(true)
     var updateNotifications by preference(true)
+    var updateChannel by preference("")
+    var installedNightlyDigest by preference("")
     var lastUpdateCheckTimestamp by preference(0L)
     var lastUpdateCheckAttemptTimestamp by preference(0L)
     var lastRunAppVersion by preference("")
@@ -617,6 +633,7 @@ class Settings(
 
     var lastFmUsername by preference("")
     var lastFmSession by preference("")
+    var lastFmSessionExpired by preference(false)
     var lastFmEnabled by preference(true)
     var lastFmUseNowPlaying by preference(true)
     var lastFmShowFriends by preference(true)
@@ -722,6 +739,7 @@ class Settings(
     var libraryManualOrder by preference(LibraryManualOrderKey, "")
     var playlistPickerSort by preference(PlaylistPickerSortKey, PlaylistPickerSort.LIBRARY)
     var playlistPickerSortDirection by preference(PlaylistPickerSortDirectionKey, SortDirection.ASCENDING)
+    var playlistEditLock by preference(PlaylistEditLockKey, true)
     var playlistSongSort by preference(PlaylistSongSort.ORIGINAL)
     var playlistSongSortDirection by preference(SortDirection.ASCENDING)
     var likedSongSort by preference(LikedSongSortKey, PlaylistSongSort.DATE_ADDED)
@@ -768,6 +786,25 @@ class Settings(
     var pendingRemoteLibraryRemovalKeysJson by preference(PendingRemoteLibraryRemovalKeysJsonKey, "[]")
     var deletedPlaylistIdsJson by preference(DeletedPlaylistIdsJsonKey, "[]")
     var libraryGridView by preference(true)
+    private var libraryViewsByFilterJson by preference(LibraryViewsByFilterKey, "{}")
+
+    fun libraryGridView(
+        filter: LibraryFilterType,
+        defaultValue: Boolean = libraryGridView,
+    ): Boolean =
+        libraryViewsByFilter()[(filter.takeUnless { it == LibraryFilterType.DEFAULT } ?: LibraryFilterType.ALL).name] ?: defaultValue
+
+    fun setLibraryGridView(
+        filter: LibraryFilterType,
+        grid: Boolean,
+    ) {
+        val key = filter.takeUnless { it == LibraryFilterType.DEFAULT } ?: LibraryFilterType.ALL
+        libraryViewsByFilterJson = Json.encodeToString(libraryViewsByFilter() + (key.name to grid))
+    }
+
+    private fun libraryViewsByFilter(): Map<String, Boolean> =
+        runCatching { Json.decodeFromString<Map<String, Boolean>>(libraryViewsByFilterJson) }.getOrDefault(emptyMap())
+
     var gridItemSize by preference(GridItemSizeKey, GridItemSize.BIG)
     private var storedLibraryGridColumns by preference(LibraryGridColumnsKey, 3)
     var libraryGridColumns: Int
@@ -1299,6 +1336,7 @@ class Settings(
         private val nonPortableKeys =
             secureSettingsKeys +
                 setOf(
+                    "lastFmSessionExpired",
                     "aiSlopBlocklistCache",
                     "aiSlopBlocklistUpdatedAt",
                     SpeedDialArtworkRefreshTimesKey,
@@ -1322,6 +1360,7 @@ class Settings(
                     "cachedAvailableUpdateJson",
                     "cachedUpdateReleasesJson",
                     "pendingUpdateReleaseJson",
+                    "installedNightlyDigest",
                     "lastUpdateCheckTime",
                     DevtoolsUnlockedKey,
                     DevtoolsPlaybackClientKey,

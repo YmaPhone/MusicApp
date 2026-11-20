@@ -169,12 +169,8 @@ internal fun PlayerBottomControls(
         ) {
             PlayerConnectedButtonGroup(
                 onQueueClick = onOpenQueue,
-                onLyricsClick = {
-                    Logger.d("Haptics", "Trigger PlayerScreen lyrics button click")
-                    hapticManager.toggle(!isLyricsVisible)
-                    onIsLyricsVisibleChange(!isLyricsVisible)
-                },
-                isLyricsActive = isLyricsVisible,
+                onLyricsClick = null,
+                isLyricsActive = false,
                 isQueueActive = false,
                 modifier = Modifier.weight(1f, fill = false),
                 compact = false,

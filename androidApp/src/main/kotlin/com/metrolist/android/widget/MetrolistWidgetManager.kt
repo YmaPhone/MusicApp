@@ -289,6 +289,15 @@ class MetrolistWidgetManager(
                         RemoteViews(context.packageName, R.layout.widget_compact_controls)
                     }
 
+                    MusicWidgetLayout.COMPACT -> {
+                        createCompactWideRemoteViews(title, artist, albumArt, R.layout.widget_compact).apply {
+                            setViewVisibility(R.id.widget_wide_artwork, if (policy.showArtwork) View.VISIBLE else View.GONE)
+                            setViewVisibility(R.id.widget_prev_container, View.GONE)
+                            setViewVisibility(R.id.widget_next_container, View.GONE)
+                            setViewVisibility(R.id.widget_play_pause_label, View.GONE)
+                        }
+                    }
+
                     MusicWidgetLayout.WIDE -> {
                         createCompactWideRemoteViews(title, artist, albumArt).apply {
                             setViewVisibility(R.id.widget_wide_artwork, if (policy.showArtwork) View.VISIBLE else View.GONE)
@@ -422,7 +431,7 @@ class MetrolistWidgetManager(
         val textIds =
             when (layout) {
                 MusicWidgetLayout.PLAYER -> R.id.widget_song_title to R.id.widget_artist_name
-                MusicWidgetLayout.WIDE -> R.id.widget_wide_song_title to R.id.widget_wide_artist_name
+                MusicWidgetLayout.COMPACT, MusicWidgetLayout.WIDE -> R.id.widget_wide_song_title to R.id.widget_wide_artist_name
                 MusicWidgetLayout.SQUARE -> R.id.widget_square_song_title to R.id.widget_square_artist_name
                 MusicWidgetLayout.CONTROLS -> null
             }
@@ -470,8 +479,9 @@ class MetrolistWidgetManager(
         title: String,
         artist: String,
         albumArt: Bitmap?,
+        layoutId: Int = R.layout.widget_compact_wide,
     ): RemoteViews {
-        val views = RemoteViews(context.packageName, R.layout.widget_compact_wide)
+        val views = RemoteViews(context.packageName, layoutId)
         views.setTextViewText(R.id.widget_wide_song_title, title)
         views.setTextViewText(R.id.widget_wide_artist_name, artist)
         views.setImageViewBitmap(R.id.widget_wide_album_art, albumArt?.let { getRoundedCornerBitmap(it) } ?: getRoundedDefaultIcon())
@@ -534,14 +544,13 @@ class MetrolistWidgetManager(
         return views
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun getCachedAlbumArt(artworkUri: String?): Bitmap? {
-        if (artworkUri != null && artworkUri == cachedArtworkUri && cachedAlbumArt != null) return cachedAlbumArt
-        val albumArt = artworkUri?.let { loadAlbumArt(it, 300) }
-        cachedArtworkUri = artworkUri
-        cachedAlbumArt = albumArt
+        cachedArtworkUri = null
+        cachedAlbumArt = null
         cachedCircularAlbumArt = null
         cachedArtworkSeed = null
-        return albumArt
+        return null
     }
 
     private fun getCachedCircularAlbumArt(albumArt: Bitmap?): Bitmap? =

@@ -53,7 +53,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import com.metrolist.android.LocalMiniPlayerBottomInset
 import com.metrolist.android.playback.LocalPlayerConnection
 import com.metrolist.android.playback.SongDownloadManager
@@ -93,10 +92,12 @@ import com.metrolist.shared.ui.components.ChipShelf
 import com.metrolist.shared.ui.components.CollectionPreviews
 import com.metrolist.shared.ui.components.EpisodePlayedIndicator
 import com.metrolist.shared.ui.components.SongThumbnailPlayingIndicator
+import com.metrolist.shared.ui.components.images.AsyncImage
 import com.metrolist.shared.ui.components.libraryCover
 import com.metrolist.shared.ui.components.menuAnchorSemantics
 import com.metrolist.shared.ui.icons.MetrolistIcons
 import com.metrolist.shared.ui.menu.BuiltinPlaylistMenuButton
+import com.metrolist.shared.ui.menu.groupedMenuItemShapes
 import com.metrolist.shared.ui.navigation.navigationPopupSource
 import com.metrolist.shared.ui.theme.gridCellShape
 import com.metrolist.shared.utils.formatDuration
@@ -423,7 +424,7 @@ private fun PodcastShowRow(
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             AsyncImage(
-                model = podcast.thumbnailUrl,
+                url = podcast.thumbnailUrl,
                 contentDescription = podcast.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(64.dp).clip(gridCellShape()),
@@ -465,7 +466,7 @@ private fun PodcastLibraryChannelRow(
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             AsyncImage(
-                model = channel.thumbnail,
+                url = channel.thumbnail,
                 contentDescription = channel.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(64.dp).clip(gridCellShape()),
@@ -508,8 +509,9 @@ private fun DownloadSortHeader(
             )
             DropdownMenuPopup(expanded = expanded, onDismissRequest = { expanded = false }) {
                 DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
-                    DownloadSort.entries.forEach { candidate ->
+                    DownloadSort.entries.forEachIndexed { index, candidate ->
                         DropdownMenuItem(
+                            shape = groupedMenuItemShapes(index, DownloadSort.entries.size).shape,
                             text = {
                                 Text(
                                     when (candidate) {
@@ -563,7 +565,7 @@ private fun PodcastLibraryEpisodeRow(
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(Modifier.size(72.dp).clip(gridCellShape())) {
                 AsyncImage(
-                    model = song.song.thumbnailUrl,
+                    url = song.song.thumbnailUrl,
                     contentDescription = song.song.title,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
@@ -609,6 +611,7 @@ private fun PodcastLibraryEpisodeRow(
                     DropdownMenuGroup(shapes = MenuDefaults.groupShape(0, 1)) {
                         DropdownMenuItem(
                             text = { Text(stringResource(Res.string.play_next)) },
+                            shape = groupedMenuItemShapes(0, if (onDownload == null) 1 else 2).shape,
                             onClick = {
                                 expanded = false
                                 onPlayNext()
@@ -618,6 +621,7 @@ private fun PodcastLibraryEpisodeRow(
                         onDownload?.let { download ->
                             DropdownMenuItem(
                                 text = { Text(stringResource(Res.string.action_download)) },
+                                shape = groupedMenuItemShapes(1, 2).shape,
                                 onClick = {
                                     expanded = false
                                     download()

@@ -21,7 +21,7 @@ internal fun List<SettingsGroupRegistration>.prioritized(page: SettingsPageId): 
             }
 
             SettingsPageId.LYRICS -> {
-                listOf("behavior", "lyricsAdvanced", "display", "accessibility", "alignment")
+                listOf("behavior", "lyricsAdvanced", "display", "alignment")
             }
 
             SettingsPageId.CONTENT -> {
@@ -55,6 +55,7 @@ internal fun List<SettingsGroupRegistration>.prioritized(page: SettingsPageId): 
                 SettingsPageId.APPEARANCE to "theme" -> {
                     listOf(
                         "themeMode",
+                        "matugen",
                         "materialYou",
                         "themeColor",
                         "dynamicTheme",
@@ -96,6 +97,7 @@ internal fun List<SettingsGroupRegistration>.prioritized(page: SettingsPageId): 
                     listOf(
                         "autoLoadMore",
                         "autoDownloadOnLike",
+                        "autoDownloadSavedCollections",
                         "persistentQueue",
                         "promptContinuePlayback",
                         "rememberShuffleRepeat",

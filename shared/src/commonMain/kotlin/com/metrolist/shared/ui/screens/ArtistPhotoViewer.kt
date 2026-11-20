@@ -93,16 +93,11 @@ import androidx.compose.ui.util.lerp
 import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.SingletonImageLoader
-import coil3.compose.AsyncImage
-import coil3.compose.AsyncImagePainter
-import coil3.compose.LocalPlatformContext
-import coil3.compose.rememberAsyncImagePainter
 import coil3.memory.MemoryCache
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.request.crossfade
 import coil3.size.Precision
-import coil3.size.Size
 import com.metrolist.shared.api.lastfm.LastFmPhotoCache
 import com.metrolist.shared.api.lastfm.LastFmPhotoDetails
 import com.metrolist.shared.api.lastfm.parsePhotoUploadDate
@@ -216,22 +211,13 @@ internal fun ArtistPhotoImage(
     contentDescription: String? = null,
     alignment: Alignment = Alignment.Center,
 ) {
-    val context = LocalPlatformContext.current
-    val request = remember(url, context) { artistPhotoRequest(context, url) }
-    val painter = rememberAsyncImagePainter(request, contentScale = ContentScale.Crop)
-    val state by painter.state.collectAsState()
-    Box(modifier) {
-        if (state !is AsyncImagePainter.State.Success) {
-            ImageLoadingPlaceholder(Modifier.fillMaxSize(), animated = state !is AsyncImagePainter.State.Error)
-        }
-        Image(
-            painter = painter,
-            contentDescription = contentDescription,
-            modifier = Modifier.fillMaxSize(),
-            alignment = alignment,
-            contentScale = ContentScale.Crop,
-        )
-    }
+    com.metrolist.shared.ui.components.images.AsyncImage(
+        url = url,
+        contentDescription = contentDescription,
+        contentScale = ContentScale.Crop,
+        alignment = alignment,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -542,21 +528,7 @@ private fun ViewerPhoto(
     sharedModifier: Modifier,
     onZoomChange: (Boolean) -> Unit,
 ) {
-    val context = LocalPlatformContext.current
-    val imageLoader = SingletonImageLoader.get(context)
-    val preview by produceState(initialPreview, photo.url) {
-        if (value == null) value = artistPhotoPreview(imageLoader, context, photo.url)
-    }
-    val request =
-        remember(photo.url, preview?.memoryCacheKey) {
-            ImageRequest
-                .Builder(context)
-                .data(photo.url)
-                .size(Size.ORIGINAL)
-                .placeholderMemoryCacheKey(preview?.memoryCacheKey)
-                .crossfade(false)
-                .build()
-        }
+    val preview = initialPreview
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
 
@@ -584,10 +556,9 @@ private fun ViewerPhoto(
     ) {
         val ratio = preview?.aspectRatio ?: GALLERY_RATIO
         val width = minOf(maxWidth, maxHeight * ratio)
-        AsyncImage(
-            model = request,
+        com.metrolist.shared.ui.components.images.AsyncImage(
+            url = photo.url,
             contentDescription = contentDescription,
-            imageLoader = imageLoader,
             contentScale = ContentScale.Crop,
             modifier =
                 Modifier
@@ -642,8 +613,8 @@ private fun PhotoDetailsSheet(
                                 Modifier.size(24.dp),
                             )
                             details?.authorAvatarUrl?.let { avatar ->
-                                AsyncImage(
-                                    avatar,
+                                com.metrolist.shared.ui.components.images.AsyncImage(
+                                    url = avatar,
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     modifier = Modifier.fillMaxSize(),
