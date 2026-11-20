@@ -37,12 +37,12 @@ write("gradle.properties", gradle_properties)
 # Direct in-app updates to YMetrolist's own GitHub releases, not the upstream app.
 update_path = "androidApp/src/main/kotlin/com/metrolist/android/update/AppUpdateManager.kt"
 update_manager = read(update_path)
-update_manager = replace_once(
-    update_manager,
-    'private const val RELEASES_URL = "https://api.github.com/repos/MetrolistGroup/Metrolist/releases?per_page=50"',
-    'private const val RELEASES_URL = "https://api.github.com/repos/YmaPhone/MusicApp/releases?per_page=50"',
-    "release repository",
-)
+upstream_releases_url = 'private const val RELEASES_URL = "https://api.github.com/repos/MetrolistGroup/Metrolist/releases?per_page=50"'
+ymetrolist_releases_url = 'private const val RELEASES_URL = "https://api.github.com/repos/YmaPhone/MusicApp/releases?per_page=50"'
+if upstream_releases_url in update_manager:
+    update_manager = update_manager.replace(upstream_releases_url, ymetrolist_releases_url, 1)
+elif ymetrolist_releases_url not in update_manager:
+    raise SystemExit("AppUpdateManager: expected upstream or YMetrolist release URL")
 update_manager, cache_changes = re.subn(
     r'(?m)^private const val CACHE_SOURCE = "[^"]+"$',
     'private const val CACHE_SOURCE = "github-releases-ymetrolist-v1"',
